@@ -7,117 +7,117 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>FamilyShare</title>
     
-    <link rel="manifest" href='data:application/json,{"name":"FamilyShare","short_name":"Family","start_url":".","display":"standalone","background_color":"#fdf6f0","theme_color":"#6b4e71","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3135/3135715.png","sizes":"512x512","type":"image/png"}]}'>
+    <link rel="manifest" href='data:application/json,{"name":"FamilyShare","short_name":"Family","start_url":".","display":"standalone","background_color":"#fdf6f0","theme_color":"#6b4e71","icons":[{"src":"icon.png","sizes":"512x512","type":"image/png"}]}'>
 
     <style>
         :root { --primary: #6b4e71; --bg: #fdf6f0; --text: #4a4a4a; --danger: #e63946; --success: #2d6a4f; --info: #007bff; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: env(safe-area-inset-bottom, 100px); }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: env(safe-area-inset-bottom, 100px); }
         
-        /* Layout */
+        /* Splash Screen Overlay */
+        #splash-screen { position: fixed; inset: 0; background: var(--bg); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.8s ease-out; }
+        .splash-logo { width: 120px; height: 120px; margin-bottom: 20px; border-radius: 20px; box-shadow: 0 10px 20px rgba(107,78,113,0.15); }
+        .loader { width: 30px; height: 30px; border: 3px solid #eee; border-top: 3px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* UI Components */
         header { background: white; padding: 15px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; }
         #feed { max-width: 600px; margin: 15px auto; padding: 0 10px; }
-        .memory-card { background: white; border-radius: 18px; margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.06); overflow: hidden; position: relative; animation: slideUp 0.4s ease; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .memory-card img { width: 100%; display: block; object-fit: cover; max-height: 500px; background: #eee; }
+        .memory-card { background: white; border-radius: 18px; margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.06); overflow: hidden; position: relative; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .memory-card img { width: 100%; display: block; object-fit: cover; max-height: 500px; }
         .memory-info { padding: 15px; }
         
-        /* Auth */
         #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .auth-card { background: white; padding: 35px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; }
+        .auth-card { background: white; padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; }
         
-        /* Buttons & Navigation */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; padding: 15px 0; display: flex; justify-content: center; gap: 10px; box-shadow: 0 -2px 15px rgba(0,0,0,0.05); z-index: 101; }
-        button { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 30px; cursor: pointer; font-weight: 600; transition: opacity 0.2s; }
-        button:active { opacity: 0.7; }
-        .del-btn { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.4); color: white; border-radius: 50%; width: 32px; height: 32px; font-size: 14px; border: none; display: flex; align-items: center; justify-content: center; }
+        button { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 30px; cursor: pointer; font-weight: 600; font-size: 0.9rem; }
+        .del-btn { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.4); color: white; border-radius: 50%; width: 30px; height: 30px; border: none; }
         
-        input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #eee; border-radius: 12px; box-sizing: border-box; background: #fafafa; font-size: 1rem; }
+        input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #eee; border-radius: 12px; box-sizing: border-box; background: #fafafa; }
         .hidden { display: none !important; }
-        .admin-badge { background: #ffd700; color: #000; font-size: 0.65rem; padding: 2px 8px; border-radius: 6px; margin-left: 5px; vertical-align: middle; text-transform: uppercase; font-weight: bold; }
-        #sync-status { display: none; position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 10px 25px; border-radius: 30px; z-index: 200; font-size: 0.9rem; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .admin-badge { background: #ffd700; color: #000; font-size: 0.6rem; padding: 2px 6px; border-radius: 5px; margin-left: 5px; vertical-align: middle; }
+        #sync-status { display: none; position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 8px 20px; border-radius: 20px; z-index: 200; font-size: 0.8rem; }
     </style>
 </head>
 <body>
+
+<div id="splash-screen">
+    <img src="icon.png" class="splash-logo" alt="FamilyShare Logo" onerror="this.style.display='none'">
+    <h2 style="color: var(--primary); font-family: sans-serif;">FamilyShare</h2>
+    <div class="loader"></div>
+</div>
 
 <div id="sync-status">Update Successful!</div>
 
 <div id="auth-screen">
     <div class="auth-card">
-        <h1 style="color: var(--primary); margin: 0 0 5px 0;">FamilyShare</h1>
-        <p style="font-size: 0.85rem; color: #888; margin-bottom: 25px;">Diwali 2026 & Beyond</p>
-        
+        <h2 style="color: var(--primary); margin-bottom: 5px;">FamilyShare</h2>
+        <p style="font-size: 0.8rem; color: #888; margin-bottom: 20px;">Private Family Album</p>
         <div id="activation-section">
             <input type="text" id="join-code" placeholder="Enter Invite Code">
             <button onclick="checkActivationCode()" style="width: 100%">Join Family</button>
-            <p style="font-size: 0.75rem; margin-top: 20px;">Admin? <a href="#" onclick="showAdminLogin()" style="color: var(--primary); font-weight: bold;">Login</a></p>
+            <p style="font-size: 0.75rem; margin-top: 15px;">Admin access? <a href="#" onclick="showAdminLogin()" style="color: var(--primary)">Login</a></p>
         </div>
-
         <div id="member-setup" class="hidden">
-            <p style="font-size: 0.9rem; margin-bottom: 10px;">Welcome! Let's set up your profile.</p>
             <input type="text" id="new-username" placeholder="Your Name (e.g. Auntie)">
-            <input type="password" id="new-password" placeholder="Choose a Password">
+            <input type="password" id="new-password" placeholder="Set a Password">
             <button onclick="finishMemberSetup()" style="width: 100%">Create Profile</button>
         </div>
-
         <div id="admin-login" class="hidden">
             <input type="password" id="admin-pass" placeholder="Admin Password">
-            <button onclick="loginAdmin()" style="width: 100%">Login</button>
-            <p style="font-size: 0.75rem; margin-top: 20px;"><a href="#" onclick="showJoinSection()" style="color: #999;">Go back</a></p>
+            <button onclick="loginAdmin()" style="width: 100%">Login as Admin</button>
+            <p style="font-size: 0.75rem; margin-top: 15px;"><a href="#" onclick="showJoinSection()">Go back</a></p>
         </div>
     </div>
 </div>
 
 <header>
-    <div style="width: 50px"></div>
-    <h2 style="margin:0; font-size: 1.3rem; color: var(--primary);">FamilyShare</h2>
-    <button id="admin-btn" onclick="showAdminPanel()" class="hidden" style="padding: 6px 12px; font-size: 0.7rem; background: #eee; color: #555;">ADMIN</button>
+    <div style="width: 45px"></div>
+    <h1>FamilyShare</h1>
+    <button id="admin-btn" onclick="showAdminPanel()" class="hidden" style="padding: 6px 12px; font-size: 0.7rem; background: #f0f0f0; color: #666;">Admin</button>
 </header>
 
 <div id="feed"></div>
 
 <nav class="bottom-nav">
-    <button onclick="openModal()" style="padding: 12px 25px; background: var(--primary);">+ Post</button>
+    <button onclick="openModal()" style="padding: 12px 25px;">+ Post</button>
     <button onclick="exportFamilyFile()" style="background: var(--success);">📤 Share</button>
-    <button onclick="document.getElementById('import-input').click()" style="background: #555;">📥 Import</button>
+    <button onclick="document.getElementById('import-input').click()" style="background: #666;">📥 Import</button>
     <input type="file" id="import-input" accept=".json" class="hidden" onchange="importFamilyFile(event)">
 </nav>
 
-<div id="adminModal" class="hidden" style="position:fixed; inset:0; background:white; z-index:2000; padding:25px; overflow-y: auto;">
-    <h2 style="margin-top:0">Admin Dashboard</h2>
-    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-    
-    <div style="background: #f9f9f9; padding: 20px; border-radius: 20px; margin-bottom: 20px;">
-        <p style="margin:0; font-size: 0.8rem; color: #666; font-weight: bold;">Active Invitation Code:</p>
-        <h1 id="display-code" style="letter-spacing: 5px; color: var(--primary); margin: 15px 0; font-size: 2.5rem;">----</h1>
-        <div style="display: flex; gap: 10px;">
-            <button onclick="generateNewCode()" style="font-size: 0.8rem; flex: 1;">New Code</button>
-            <button onclick="sendEmailInvite()" style="font-size: 0.8rem; flex: 1.5; background: var(--info);">📧 Email Invite</button>
+<div id="adminModal" class="hidden" style="position:fixed; inset:0; background:white; z-index:2000; padding:20px; overflow-y: auto;">
+    <h3>Admin Dashboard</h3>
+    <div style="background: #f9f9f9; padding: 15px; border-radius: 15px; margin-bottom: 15px;">
+        <p style="margin:0; font-size: 0.8rem;">Invite Code:</p>
+        <h2 id="display-code" style="letter-spacing: 4px; color: var(--primary); margin: 10px 0;">----</h2>
+        <div style="display: flex; gap: 8px;">
+            <button onclick="generateNewCode()" style="font-size: 0.75rem; flex: 1;">New Code</button>
+            <button onclick="sendEmailInvite()" style="font-size: 0.75rem; flex: 1.5; background: var(--info);">📧 Email Invite</button>
         </div>
+        <p style="font-size: 0.65rem; color: #999; margin-top: 10px;">Click Email Invite to open mail app & copy code to clipboard.</p>
     </div>
-
-    <div style="background: #fff0f0; padding: 20px; border-radius: 20px; margin-bottom: 20px;">
-        <p style="margin:0; font-size: 0.8rem; font-weight: bold;">Change Admin Password</p>
-        <input type="password" id="new-admin-pass" placeholder="New Password">
-        <button onclick="updateAdminPass()" style="background: #777; font-size: 0.8rem; width: 100%;">Update</button>
+    <div style="background: #fff0f0; padding: 15px; border-radius: 15px;">
+        <input type="password" id="new-admin-pass" placeholder="New Admin Password">
+        <button onclick="updateAdminPass()" style="background: #888; width: 100%;">Update Password</button>
     </div>
-
-    <button onclick="closeAdminPanel()" style="margin-top: 20px; background: #222; width: 100%; padding: 15px;">Close Dashboard</button>
-    <button onclick="logout()" style="margin-top: 15px; background: #f0f0f0; color: #333; width: 100%; padding: 10px;">Logout</button>
+    <button onclick="closeAdminPanel()" style="margin-top: 25px; background: #333; width: 100%;">Close</button>
+    <button onclick="logout()" style="margin-top: 10px; background: #eee; color: #333; width: 100%;">Logout</button>
 </div>
 
-<div id="uploadModal" class="hidden" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:2000; display:flex; align-items:center; justify-content:center; padding: 20px;">
-    <div style="background:white; padding:30px; border-radius:25px; width:100%; max-width:400px; box-sizing: border-box;">
-        <h3 style="margin-top:0">Share a Memory</h3>
-        <p style="font-size: 0.8rem; color: #666;">Choose a photo and add a caption.</p>
-        <input type="file" id="imageInput" accept="image/*" style="padding: 10px 0;">
-        <input type="text" id="captionInput" placeholder="Describe this moment...">
-        <button onclick="handleUpload()" style="width: 100%; margin-top: 15px; padding: 15px;">Post to Family</button>
-        <button onclick="closeModal()" style="background:none; color: #999; width: 100%; margin-top: 10px; font-weight: normal;">Cancel</button>
+<div id="uploadModal" class="hidden" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:2000; display:flex; align-items:center; justify-content:center;">
+    <div style="background:white; padding:25px; border-radius:25px; width:90%; max-width:400px;">
+        <h3 style="margin-top:0">Post Memory</h3>
+        <input type="file" id="imageInput" accept="image/*">
+        <input type="text" id="captionInput" placeholder="Add a caption...">
+        <button onclick="handleUpload()" style="width: 100%; margin-top: 10px;">Post</button>
+        <button onclick="closeModal()" style="background:none; color: #999; width: 100%; margin-top: 10px;">Cancel</button>
     </div>
 </div>
 
 <script>
-    // --- PWA Offline Logic ---
+    // --- Service Worker ---
     if ('serviceWorker' in navigator) {
         const swCode = `self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));`;
         const blob = new Blob([swCode], {type: 'text/javascript'});
@@ -127,28 +127,31 @@
     let db;
     let currentUser = JSON.parse(localStorage.getItem('family_user'));
 
-    // --- Database Setup ---
-    const request = indexedDB.open("FamilyShare_Final_V3", 1);
+    const request = indexedDB.open("FamilyShare_Final_V1.2", 1);
     request.onupgradeneeded = (e) => {
         const d = e.target.result;
         d.createObjectStore("memories", { keyPath: "id" });
         d.createObjectStore("settings", { keyPath: "key" });
     };
+
     request.onsuccess = (e) => {
         db = e.target.result;
-        initAdminDefaults();
+        initAdmin();
         checkAuth();
+        setTimeout(() => {
+            const splash = document.getElementById('splash-screen');
+            splash.style.opacity = '0';
+            setTimeout(() => splash.style.display = 'none', 800);
+        }, 600);
     };
 
-    async function initAdminDefaults() {
+    async function initAdmin() {
         const tx = db.transaction("settings", "readwrite");
-        const store = tx.objectStore("settings");
-        store.get("admin_password").onsuccess = (e) => {
-            if (!e.target.result) store.put({ key: "admin_password", value: "admin" });
+        tx.objectStore("settings").get("admin_password").onsuccess = (e) => {
+            if (!e.target.result) tx.objectStore("settings").put({ key: "admin_password", value: "admin" });
         };
     }
 
-    // --- Auth & Profile Management ---
     function checkAuth() {
         if (currentUser) {
             document.getElementById('auth-screen').classList.add('hidden');
@@ -157,6 +160,31 @@
         }
     }
 
+    // --- Rectified Email Logic ---
+    function sendEmailInvite() {
+        const code = document.getElementById('display-code').innerText;
+        if (code === "----" || !code) return alert("Please generate a code first!");
+
+        const appLink = window.location.href;
+        const subject = "Invite to our Private Family Album!";
+        const bodyText = `Hi!\n\nI'm using FamilyShare to preserve our family memories. Follow these steps:\n\n1. Open link: ${appLink}\n2. Use Code: ${code}\n\nSee you inside!`;
+
+        // 1. Attempt to trigger mail client
+        const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
+        const a = document.createElement('a');
+        a.href = mailtoUrl;
+        a.click();
+
+        // 2. Dual Action: Copy to Clipboard immediately as a fallback
+        const copyText = `FamilyShare Invite\nLink: ${appLink}\nCode: ${code}`;
+        navigator.clipboard.writeText(copyText).then(() => {
+            alert("Email app triggered!\n\nFALLBACK: We also copied the invite link and code to your clipboard. If the email didn't open, just Paste (Ctrl+V) it into a message manually.");
+        }).catch(() => {
+            alert("Invite Code: " + code + "\n\n(Please copy this code manually)");
+        });
+    }
+
+    // --- Core Logic (Admin, Upload, Feed, Sync) ---
     async function loginAdmin() {
         const input = document.getElementById('admin-pass').value;
         db.transaction("settings", "readonly").objectStore("settings").get("admin_password").onsuccess = (e) => {
@@ -164,7 +192,7 @@
                 currentUser = { name: "Admin", role: "admin", id: 'admin' };
                 localStorage.setItem('family_user', JSON.stringify(currentUser));
                 location.reload();
-            } else alert("Incorrect password.");
+            } else alert("Invalid Password");
         };
     }
 
@@ -174,50 +202,27 @@
             if (e.target.result && input === e.target.result.value) {
                 document.getElementById('activation-section').classList.add('hidden');
                 document.getElementById('member-setup').classList.remove('hidden');
-            } else alert("Invalid code. Please ask the Admin for the current code.");
+            } else alert("Invalid Code");
         };
     }
 
     function finishMemberSetup() {
         const name = document.getElementById('new-username').value;
-        if (!name) return alert("Please enter your name.");
+        if (!name) return alert("Enter your name");
         currentUser = { name: name, role: "member", id: crypto.randomUUID() };
         localStorage.setItem('family_user', JSON.stringify(currentUser));
         location.reload();
     }
 
-    // --- Email Invitation Logic ---
-    function sendEmailInvite() {
-        const code = document.getElementById('display-code').innerText;
-        if (code === "----") return alert("Generate a code first!");
-
-        const email = prompt("Enter family member's email address:");
-        if (!email) return;
-
-        const subject = encodeURIComponent("You're invited to our Private Family Album!");
-        const appLink = window.location.href;
-        const body = encodeURIComponent(
-            `Hi!\n\nI'm using FamilyShare to preserve our family memories. To join our private group, follow these steps:\n\n` +
-            `1. Open our app link: ${appLink}\n` +
-            `2. Enter this Activation Code: ${code}\n\n` +
-            `Once you're in, you can see all our photos and share your own!\n\nSee you there!`
-        );
-        
-        window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-    }
-
-    // --- Memory Management ---
     async function handleUpload() {
         const file = document.getElementById('imageInput').files[0];
-        const cap = document.getElementById('captionInput').value;
-        if (!file) return alert("Please select a photo.");
-
+        if (!file) return;
         const reader = new FileReader();
         reader.onload = async (e) => {
-            const img = await compressImage(e.target.result);
+            const img = await compress(e.target.result);
             const tx = db.transaction("memories", "readwrite");
             tx.objectStore("memories").add({
-                id: crypto.randomUUID(), image: img, caption: cap,
+                id: crypto.randomUUID(), image: img, caption: document.getElementById('captionInput').value,
                 author: currentUser.name, authorId: currentUser.id, role: currentUser.role, timestamp: Date.now()
             });
             tx.oncomplete = () => { closeModal(); loadMemories(); };
@@ -226,98 +231,33 @@
     }
 
     function loadMemories() {
-        const feed = document.getElementById('feed');
-        feed.innerHTML = "";
+        const feed = document.getElementById('feed'); feed.innerHTML = "";
         db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = (e) => {
-            const memories = e.target.result.sort((a, b) => b.timestamp - a.timestamp);
-            if(memories.length === 0) {
-                feed.innerHTML = `<p style="text-align:center; color:#999; margin-top:50px;">The feed is quiet. Post a memory or import a shared file!</p>`;
-            }
-            memories.forEach(m => {
-                const card = document.createElement('div');
-                card.className = 'memory-card';
-                const canDelete = m.authorId === currentUser.id || currentUser.role === 'admin';
-                card.innerHTML = `
-                    ${canDelete ? `<button class="del-btn" onclick="deleteMem('${m.id}')">✕</button>` : ''}
-                    <img src="${m.image}" loading="lazy">
-                    <div class="memory-info">
-                        <strong>${m.author}</strong> ${m.role === 'admin' ? '<span class="admin-badge">Admin</span>' : ''}
-                        <p style="margin:8px 0; line-height:1.4;">${m.caption}</p>
-                        <small style="color:#aaa; font-size:0.75rem;">${new Date(m.timestamp).toLocaleDateString()} • ${new Date(m.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
-                    </div>`;
+            e.target.result.sort((a,b)=>b.timestamp-a.timestamp).forEach(m => {
+                const card = document.createElement('div'); card.className = 'memory-card';
+                const canDel = m.authorId === currentUser.id || currentUser.role === 'admin';
+                card.innerHTML = `${canDel ? `<button class="del-btn" onclick="delMem('${m.id}')">✕</button>` : ''}
+                    <img src="${m.image}" loading="lazy"><div class="memory-info"><strong>${m.author}</strong><p>${m.caption}</p><small>${new Date(m.timestamp).toLocaleString()}</small></div>`;
                 feed.appendChild(card);
             });
         };
     }
 
-    async function deleteMem(id) {
-        if (confirm("Delete this memory forever?")) {
-            const tx = db.transaction("memories", "readwrite");
-            tx.objectStore("memories").delete(id);
-            tx.oncomplete = loadMemories;
-        }
-    }
-
-    // --- Sync Logic (Export/Import) ---
-    function exportFamilyFile() {
-        db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = (e) => {
-            const data = { memories: e.target.result, exportedAt: Date.now(), exportedBy: currentUser.name };
-            const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `FamilyUpdate_${new Date().toISOString().slice(0,10)}.json`;
-            a.click();
-        };
-    }
-
-    function importFamilyFile(event) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const data = JSON.parse(e.target.result);
-                const tx = db.transaction("memories", "readwrite");
-                data.memories.forEach(m => tx.objectStore("memories").put(m));
-                tx.oncomplete = () => { showStatus("Feed Updated!"); loadMemories(); };
-            } catch(err) { alert("Error reading file. Make sure it's a valid FamilyUpdate JSON."); }
-        };
-        reader.readAsText(event.target.files[0]);
-    }
-
-    function compressImage(base64) {
-        return new Promise(res => {
-            const img = new Image(); img.src = base64;
-            img.onload = () => {
-                const cvs = document.createElement('canvas');
-                const scale = Math.min(1, 1200 / img.width);
-                cvs.width = img.width * scale; cvs.height = img.height * scale;
-                cvs.getContext('2d').drawImage(img, 0, 0, cvs.width, cvs.height);
-                res(cvs.toDataURL('image/jpeg', 0.7));
-            }
-        });
-    }
-
-    // --- UI State Helpers ---
+    function delMem(id) { if(confirm("Delete memory?")) { const tx = db.transaction("memories", "readwrite"); tx.objectStore("memories").delete(id); tx.oncomplete = loadMemories; } }
+    function exportFamilyFile() { db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = (e) => { const blob = new Blob([JSON.stringify({memories: e.target.result})], {type: "application/json"}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Family_Update.json`; a.click(); }; }
+    function importFamilyFile(event) { const r = new FileReader(); r.onload = (e) => { const data = JSON.parse(e.target.result); const tx = db.transaction("memories", "readwrite"); data.memories.forEach(m => tx.objectStore("memories").put(m)); tx.oncomplete = () => { showStatus("Imported!"); loadMemories(); }; }; r.readAsText(event.target.files[0]); }
+    function compress(b64) { return new Promise(res => { const img = new Image(); img.src = b64; img.onload = () => { const cvs = document.createElement('canvas'); const scale = Math.min(1, 1080/img.width); cvs.width = img.width*scale; cvs.height = img.height*scale; cvs.getContext('2d').drawImage(img,0,0,cvs.width,cvs.height); res(cvs.toDataURL('image/jpeg', 0.6)); } }); }
     function showAdminLogin() { document.getElementById('activation-section').classList.add('hidden'); document.getElementById('admin-login').classList.remove('hidden'); }
     function showJoinSection() { document.getElementById('admin-login').classList.add('hidden'); document.getElementById('activation-section').classList.remove('hidden'); }
     function openModal() { document.getElementById('uploadModal').classList.remove('hidden'); }
     function closeModal() { document.getElementById('uploadModal').classList.add('hidden'); }
-    function showAdminPanel() { document.getElementById('adminModal').classList.remove('hidden'); refreshInviteCode(); }
+    function showAdminPanel() { document.getElementById('adminModal').classList.remove('hidden'); refreshCode(); }
     function closeAdminPanel() { document.getElementById('adminModal').classList.add('hidden'); }
-    function logout() { if(confirm("Logout?")) { localStorage.clear(); location.reload(); } }
-    function showStatus(msg) { const s = document.getElementById('sync-status'); s.innerText = msg; s.style.display = 'block'; setTimeout(()=>s.style.display='none',3000); }
-    function refreshInviteCode() { db.transaction("settings", "readonly").objectStore("settings").get("active_invite").onsuccess = (e) => document.getElementById('display-code').innerText = e.target.result?.value || "----"; }
-    async function generateNewCode() {
-        const c = Math.random().toString(36).substring(2, 10).toUpperCase();
-        const tx = db.transaction("settings", "readwrite");
-        tx.objectStore("settings").put({key: "active_invite", value: c});
-        tx.oncomplete = refreshInviteCode;
-    }
-    function updateAdminPass() {
-        const p = document.getElementById('new-admin-pass').value;
-        if(p.length < 4) return alert("Password must be at least 4 characters.");
-        db.transaction("settings", "readwrite").objectStore("settings").put({key: "admin_password", value: p});
-        alert("Admin password updated!");
-    }
+    function logout() { localStorage.clear(); location.reload(); }
+    function showStatus(m) { const s = document.getElementById('sync-status'); s.innerText = m; s.style.display = 'block'; setTimeout(()=>s.style.display='none',3000); }
+    function refreshCode() { db.transaction("settings", "readonly").objectStore("settings").get("active_invite").onsuccess = (e) => document.getElementById('display-code').innerText = e.target.result?.value || "----"; }
+    function generateNewCode() { const c = Math.random().toString(36).substring(2,10).toUpperCase(); const tx = db.transaction("settings","readwrite"); tx.objectStore("settings").put({key:"active_invite", value:c}); tx.oncomplete = refreshCode; }
+    function updateAdminPass() { const p = document.getElementById('new-admin-pass').value; if(p) db.transaction("settings","readwrite").objectStore("settings").put({key:"admin_password", value:p}); alert("Updated!"); }
 </script>
 </body>
 </html>
