@@ -3,273 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>FamilyShare | v1.3</title>
-    <link rel="manifest" href='data:application/json,{"name":"FamilyShare","short_name":"Family","start_url":".","display":"standalone","background_color":"#fdf6f0","theme_color":"#6b4e71","icons":[{"src":"icon.png","sizes":"512x512","type":"image/png"}]}'>
+    <title>FamilyShare | Home</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js" async defer></script>
+    
     <style>
-        :root { --primary: #6b4e71; --bg: #fdf6f0; --text: #4a4a4a; --success: #2d6a4f; --info: #007bff; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 100px; }
-        #splash-screen { position: fixed; inset: 0; background: var(--bg); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
-        .splash-logo { width: 100px; border-radius: 20px; margin-bottom: 15px; }
+        :root { --primary: #6b4e71; --bg: #fdf6f0; --text: #4a4a4a; --success: #2d6a4f; --danger: #e63946; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding-bottom: 100px; color: var(--text); }
+        
         header { background: white; padding: 15px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; }
-        #feed { max-width: 600px; margin: 15px auto; padding: 0 10px; }
-        .memory-card { background: white; border-radius: 18px; margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.06); overflow: hidden; position: relative; }
+        #feed { max-width: 600px; margin: auto; padding: 10px; }
+        .memory-card { background: white; border-radius: 18px; margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.06); overflow: hidden; }
         .memory-card img { width: 100%; display: block; object-fit: cover; max-height: 500px; }
         .memory-info { padding: 15px; }
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; padding: 15px 0; display: flex; justify-content: center; gap: 10px; box-shadow: 0 -2px 15px rgba(0,0,0,0.05); z-index: 101; }
-        button { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 30px; cursor: pointer; font-weight: 600; }
-        .del-btn { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.4); color: white; border-radius: 50%; width: 30px; height: 30px; border: none; }
-        input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #eee; border-radius: 12px; box-sizing: border-box; }
+        
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; padding: 20px 0; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 -2px 15px rgba(0,0,0,0.05); z-index: 101; }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 30px; cursor: pointer; font-weight: bold; font-size: 1rem; width: 80%; max-width: 300px; }
+        .btn-logout { background: none; border: 1px solid #ddd; color: #888; padding: 5px 12px; border-radius: 15px; font-size: 0.75rem; cursor: pointer; }
+        
+        #auto-status { position: fixed; top: 70px; right: 20px; font-size: 0.7rem; background: rgba(255,255,255,0.9); padding: 5px 12px; border-radius: 20px; z-index: 200; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .dot { height: 8px; width: 8px; background-color: #bbb; border-radius: 50%; display: inline-block; }
+        .dot-active { background-color: var(--success); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         .hidden { display: none !important; }
-        #sync-status { display: none; position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 8px 20px; border-radius: 20px; z-index: 200; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
-<div id="splash-screen">
-    <img src="icon.png" class="splash-logo" alt="Logo" onerror="this.style.display='none'">
-    <h2 style="color: var(--primary)">FamilyShare</h2>
-</div>
-
-<div id="sync-status">Processing...</div>
-
-<div id="auth-screen">
-    <div style="background: white; padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; margin: auto; margin-top: 20vh;">
-        <h2 style="color: var(--primary)">FamilyShare</h2>
-        <div id="activation-section">
-            <input type="text" id="join-code" placeholder="Invite Code">
-            <button onclick="checkActivationCode()" style="width: 100%">Join</button>
-            <p style="font-size: 0.7rem; margin-top: 15px;">Admin? <a href="#" onclick="showAdminLogin()">Login</a></p>
-        </div>
-        <div id="member-setup" class="hidden">
-            <input type="text" id="new-username" placeholder="Your Name">
-            <input type="password" id="new-password" placeholder="Password">
-            <button onclick="finishMemberSetup()" style="width: 100%">Create Profile</button>
-        </div>
-        <div id="admin-login" class="hidden">
-            <input type="password" id="admin-pass" placeholder="Admin Password">
-            <button onclick="loginAdmin()" style="width: 100%">Admin Login</button>
-        </div>
-    </div>
-</div>
+<div id="auto-status"><span id="status-dot" class="dot"></span> <span id="status-text">Not Connected</span></div>
 
 <header>
-    <div style="width: 45px"></div>
-    <h1>FamilyShare</h1>
-    <button id="admin-btn" onclick="showAdminPanel()" class="hidden" style="padding: 5px; font-size: 0.7rem;">Admin</button>
+    <div style="width: 60px"></div> <h1 style="margin:0; font-size: 1.4rem; color: var(--primary);">FamilyShare</h1>
+    <button class="btn-logout" onclick="logout()">Logout</button>
 </header>
 
 <div id="feed"></div>
 
+<div id="setup-card" class="hidden" style="margin: 20px; background: white; padding: 25px; border-radius: 20px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+    <h3 style="margin-top:0">Welcome!</h3>
+    <p style="font-size: 0.9rem; color: #666;">Link your Google account to automatically see family photos.</p>
+    <button onclick="handleAuthClick()" style="background: #4285F4; color:white; border:none; padding:12px 20px; border-radius:10px; font-weight:bold; cursor:pointer;">Link Google Drive</button>
+</div>
+
 <nav class="bottom-nav">
-    <button onclick="openModal()">+ Post</button>
-    <button onclick="exportFamilyFile()" style="background: var(--success);">📤 Share</button>
-    <button onclick="document.getElementById('import-input').click()" style="background: #666;">📥 Import</button>
-    <input type="file" id="import-input" accept=".json" class="hidden" onchange="importFamilyFile(event)">
+    <button class="btn-main" onclick="document.getElementById('imgIn').click()">+ New Memory</button>
 </nav>
 
-<div id="adminModal" class="hidden" style="position:fixed; inset:0; background:white; z-index:2000; padding:20px; overflow-y: auto;">
-    <h3>Admin Dashboard</h3>
-    <div style="background: #f9f9f9; padding: 15px; border-radius: 15px; margin-bottom: 15px;">
-        <p>Invite Code:</p>
-        <h1 id="display-code">----</h1>
-        <button onclick="generateNewCode()">New Code</button>
-        <button onclick="sendEmailInvite()" style="background: var(--info);">📧 Email Invite</button>
-    </div>
-    <button onclick="closeAdminPanel()" style="width:100%; background:#333;">Close</button>
-    <button onclick="logout()" style="width:100%; background:#eee; color:#333; margin-top:10px;">Logout</button>
-</div>
-
-<div id="uploadModal" class="hidden" style="position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:2000; display:flex; align-items:center; justify-content:center;">
-    <div style="background:white; padding:25px; border-radius:25px; width:90%; max-width:400px;">
-        <h3>New Memory</h3>
-        <input type="file" id="imageInput" accept="image/*">
-        <input type="text" id="captionInput" placeholder="Caption...">
-        <button onclick="handleUpload()" style="width: 100%">Post</button>
-        <button onclick="closeModal()" style="background:none; color: #999; width: 100%">Cancel</button>
-    </div>
-</div>
+<input type="file" id="imgIn" accept="image/*" class="hidden" onchange="handlePost(event)">
 
 <script>
-    let db;
-    let currentUser = JSON.parse(localStorage.getItem('family_user'));
+    // --- CONFIG ---
+    const CLIENT_ID = '825926708576-1mvndhveb3qe5qhtql14dv85c5rnld74.apps.googleusercontent.com';
+    const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+    let tokenClient;
+    let accessToken = localStorage.getItem('google_access_token');
 
-    // Uniform DB Name to prevent Import errors
-    const request = indexedDB.open("FamilyShare_ULTIMATE", 1);
-    request.onupgradeneeded = (e) => {
+    let db;
+    const request = indexedDB.open("FamilyShare_AutoSync_v5", 1);
+    request.onupgradeneeded = e => {
         db = e.target.result;
         db.createObjectStore("memories", { keyPath: "id" });
-        db.createObjectStore("settings", { keyPath: "key" });
     };
-    request.onsuccess = (e) => {
+
+    request.onsuccess = e => {
         db = e.target.result;
-        initAdmin();
-        checkAuth();
-        setTimeout(() => document.getElementById('splash-screen').style.opacity = '0', 500);
-        setTimeout(() => document.getElementById('splash-screen').style.display = 'none', 1000);
+        loadFeed();
+        gisInit();
     };
 
-    // --- RECTIFIED IMPORT FUNCTION ---
-    async function importFamilyFile(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        showStatus("Reading File...");
-        const reader = new FileReader();
+    function gisInit() {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: SCOPES,
+            callback: (response) => {
+                accessToken = response.access_token;
+                localStorage.setItem('google_access_token', accessToken);
+                document.getElementById('setup-card').classList.add('hidden');
+                updateStatus("Connected", true);
+                autoSync();
+            },
+        });
         
-        reader.onerror = () => alert("Error reading file.");
-        reader.onload = async (e) => {
-            try {
-                const data = JSON.parse(e.target.result);
-                
-                // Validation: Check if it's a valid export
-                if (!data.memories || !Array.isArray(data.memories)) {
-                    throw new Error("Invalid FamilyShare file format.");
-                }
-
-                showStatus(`Syncing ${data.memories.length} items...`);
-                
-                const tx = db.transaction(["memories"], "readwrite");
-                const store = tx.objectStore("memories");
-
-                // Process each memory
-                for (const m of data.memories) {
-                    store.put(m); // Put overwrites if ID exists, adds if new
-                }
-
-                tx.oncomplete = () => {
-                    showStatus("Sync Complete!");
-                    loadMemories();
-                    event.target.value = ""; // Reset input
-                };
-                
-                tx.onerror = () => alert("Database error during import.");
-
-            } catch (err) {
-                console.error(err);
-                alert("Import Failed: " + err.message);
-                showStatus("Sync Failed");
-            }
-        };
-        reader.readAsText(file);
-    }
-
-    // --- RECTIFIED EXPORT FUNCTION ---
-    function exportFamilyFile() {
-        showStatus("Preparing Export...");
-        const tx = db.transaction("memories", "readonly");
-        const store = tx.objectStore("memories");
-        
-        store.getAll().onsuccess = (e) => {
-            const exportData = {
-                app: "FamilyShare",
-                version: "1.3",
-                exportedAt: Date.now(),
-                memories: e.target.result
-            };
-            
-            const blob = new Blob([JSON.stringify(exportData)], {type: "application/json"});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `FamilyUpdate_${new Date().toISOString().slice(0,10)}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            showStatus("Export Ready!");
-        };
-    }
-
-    // --- Existing Helper Logic ---
-    async function initAdmin() {
-        const tx = db.transaction("settings", "readwrite");
-        tx.objectStore("settings").get("admin_password").onsuccess = (e) => {
-            if (!e.target.result) tx.objectStore("settings").put({ key: "admin_password", value: "admin" });
-        };
-    }
-    function checkAuth() {
-        if (currentUser) {
-            document.getElementById('auth-screen').classList.add('hidden');
-            if(currentUser.role === 'admin') document.getElementById('admin-btn').classList.remove('hidden');
-            loadMemories();
+        if (accessToken) {
+            updateStatus("Syncing...", true);
+            autoSync();
+        } else {
+            document.getElementById('setup-card').classList.remove('hidden');
         }
     }
-    async function loginAdmin() {
-        const input = document.getElementById('admin-pass').value;
-        db.transaction("settings", "readonly").objectStore("settings").get("admin_password").onsuccess = (e) => {
-            if (input === (e.target.result?.value || "admin")) {
-                currentUser = { name: "Admin", role: "admin", id: 'admin' };
-                localStorage.setItem('family_user', JSON.stringify(currentUser));
-                location.reload();
-            } else alert("Wrong Password");
-        };
+
+    function handleAuthClick() {
+        tokenClient.requestAccessToken({prompt: 'consent'});
     }
-    function sendEmailInvite() {
-        const code = document.getElementById('display-code').innerText;
-        const appLink = window.location.href;
-        const bodyText = `Join our FamilyShare album!\nLink: ${appLink}\nCode: ${code}`;
-        window.location.href = `mailto:?subject=Family Invite&body=${encodeURIComponent(bodyText)}`;
-        navigator.clipboard.writeText(bodyText).then(() => alert("Invite copied to clipboard!"));
+
+    function logout() {
+        if(confirm("Logout and disconnect Google Drive?")) {
+            localStorage.removeItem('google_access_token');
+            accessToken = null;
+            location.reload();
+        }
     }
-    async function handleUpload() {
-        const file = document.getElementById('imageInput').files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const img = await compress(e.target.result);
-            const tx = db.transaction("memories", "readwrite");
-            tx.objectStore("memories").add({
-                id: crypto.randomUUID(), image: img, caption: document.getElementById('captionInput').value,
-                author: currentUser.name, authorId: currentUser.id, role: currentUser.role, timestamp: Date.now()
+
+    function updateStatus(text, active) {
+        document.getElementById('status-text').innerText = text;
+        document.getElementById('status-dot').className = active ? 'dot dot-active' : 'dot';
+    }
+
+    async function autoSync() {
+        try {
+            const tx = db.transaction("memories", "readonly");
+            const local = await new Promise(res => {
+                tx.objectStore("memories").getAll().onsuccess = e => res(e.target.result);
             });
-            tx.oncomplete = () => { closeModal(); loadMemories(); };
+
+            const search = await fetch('https://www.googleapis.com/drive/v3/files?q=name="family_ledger.json"', {
+                headers: { 'Authorization': `Bearer ${accessToken}` }
+            });
+            const searchRes = await search.json();
+            
+            let fileId = searchRes.files && searchRes.files.length > 0 ? searchRes.files[0].id : null;
+            let driveData = [];
+
+            if (fileId) {
+                const download = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                });
+                driveData = await download.json();
+            }
+
+            const combined = new Map();
+            driveData.forEach(m => combined.set(m.id, m));
+            local.forEach(m => combined.set(m.id, m));
+            const finalData = Array.from(combined.values());
+
+            const writeTx = db.transaction("memories", "readwrite");
+            finalData.forEach(m => writeTx.objectStore("memories").put(m));
+            writeTx.oncomplete = () => loadFeed();
+
+            const metadata = { name: 'family_ledger.json', mimeType: 'application/json' };
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+            form.append('file', new Blob([JSON.stringify(finalData)], { type: 'application/json' }));
+
+            await fetch(fileId ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart` : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                method: fileId ? 'PATCH' : 'POST',
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+                body: form
+            });
+
+            updateStatus("Up to date", false);
+        } catch (e) {
+            updateStatus("Disconnected", false);
+            document.getElementById('setup-card').classList.remove('hidden');
+        }
+    }
+
+    async function handlePost(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        updateStatus("Uploading...", true);
+        const reader = new FileReader();
+        reader.onload = async event => {
+            const memory = {
+                id: crypto.randomUUID(),
+                image: await compress(event.target.result),
+                timestamp: Date.now()
+            };
+            
+            const tx = db.transaction("memories", "readwrite");
+            tx.objectStore("memories").add(memory);
+            tx.oncomplete = () => {
+                loadFeed();
+                autoSync();
+            };
         };
         reader.readAsDataURL(file);
     }
-    function loadMemories() {
-        const feed = document.getElementById('feed'); feed.innerHTML = "";
-        db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = (e) => {
-            e.target.result.sort((a,b)=>b.timestamp-a.timestamp).forEach(m => {
-                const card = document.createElement('div'); card.className = 'memory-card';
-                const canDel = m.authorId === currentUser.id || currentUser.role === 'admin';
-                card.innerHTML = `${canDel ? `<button class="del-btn" onclick="delMem('${m.id}')">✕</button>` : ''}
-                    <img src="${m.image}"><div class="memory-info"><strong>${m.author}</strong><p>${m.caption}</p><small>${new Date(m.timestamp).toLocaleString()}</small></div>`;
+
+    function loadFeed() {
+        const feed = document.getElementById('feed');
+        feed.innerHTML = "";
+        db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => {
+            const items = e.target.result.sort((a,b)=>b.timestamp-a.timestamp);
+            if(items.length === 0) {
+                feed.innerHTML = `<div style="text-align:center; margin-top:50px; color:#aaa;">No memories yet. Post the first one!</div>`;
+            }
+            items.forEach(m => {
+                const card = document.createElement('div');
+                card.className = 'memory-card';
+                card.innerHTML = `<img src="${m.image}"><div class="memory-info"><small style="color:#bbb;">${new Date(m.timestamp).toLocaleString()}</small></div>`;
                 feed.appendChild(card);
             });
         };
     }
-    function compress(b64) { return new Promise(res => { const img = new Image(); img.src = b64; img.onload = () => { const cvs = document.createElement('canvas'); const scale = Math.min(1, 1080/img.width); cvs.width = img.width*scale; cvs.height = img.height*scale; cvs.getContext('2d').drawImage(img,0,0,cvs.width,cvs.height); res(cvs.toDataURL('image/jpeg', 0.6)); } }); }
-    function showStatus(m) { const s = document.getElementById('sync-status'); s.innerText = m; s.style.display = 'block'; setTimeout(()=>s.style.display='none',3000); }
-    function checkActivationCode() {
-        const input = document.getElementById('join-code').value.toUpperCase();
-        db.transaction("settings", "readonly").objectStore("settings").get("active_invite").onsuccess = (e) => {
-            if (e.target.result && input === e.target.result.value) {
-                document.getElementById('activation-section').classList.add('hidden');
-                document.getElementById('member-setup').classList.remove('hidden');
-            } else alert("Invalid Code");
-        };
+
+    function compress(b64) {
+        return new Promise(res => {
+            const img = new Image(); img.src = b64;
+            img.onload = () => {
+                const cvs = document.createElement('canvas');
+                const scale = Math.min(1, 1000 / img.width);
+                cvs.width = img.width * scale; cvs.height = img.height * scale;
+                cvs.getContext('2d').drawImage(img, 0, 0, cvs.width, cvs.height);
+                res(cvs.toDataURL('image/jpeg', 0.6));
+            }
+        });
     }
-    function finishMemberSetup() {
-        const name = document.getElementById('new-username').value;
-        if (!name) return alert("Enter name");
-        currentUser = { name: name, role: "member", id: crypto.randomUUID() };
-        localStorage.setItem('family_user', JSON.stringify(currentUser));
-        location.reload();
-    }
-    function generateNewCode() {
-        const c = Math.random().toString(36).substring(2,10).toUpperCase();
-        const tx = db.transaction("settings","readwrite");
-        tx.objectStore("settings").put({key:"active_invite", value:c});
-        tx.oncomplete = () => document.getElementById('display-code').innerText = c;
-    }
-    function openModal() { document.getElementById('uploadModal').classList.remove('hidden'); }
-    function closeModal() { document.getElementById('uploadModal').classList.add('hidden'); }
-    function showAdminPanel() { document.getElementById('adminModal').classList.remove('hidden'); }
-    function closeAdminPanel() { document.getElementById('adminModal').classList.add('hidden'); }
-    function logout() { localStorage.clear(); location.reload(); }
-    function showAdminLogin() { document.getElementById('activation-section').classList.add('hidden'); document.getElementById('admin-login').classList.remove('hidden'); }
-    function delMem(id) { if(confirm("Delete?")) { const tx = db.transaction("memories", "readwrite"); tx.objectStore("memories").delete(id); tx.oncomplete = loadMemories; } }
 </script>
 </body>
 </html>
