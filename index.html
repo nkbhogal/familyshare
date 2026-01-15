@@ -3,18 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>FamilyShare</title>
+    <title id="page-title">FamilyShare</title>
     
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://apis.google.com/js/api.js" async defer></script>
     
     <style>
         :root { --primary: #e63946; --secondary: #457b9d; --bg: #fdf6f0; --success: #2a9d8f; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding-bottom: 120px; color: #333; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding-bottom: 120px; color: #333; -webkit-tap-highlight-color: transparent; }
         
         header { background: white; padding: 15px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; }
         #feed { max-width: 600px; margin: auto; padding: 10px; }
-        .memory-card { background: white; border-radius: 18px; margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.06); overflow: hidden; }
+        
+        .version-badge { font-size: 0.6rem; background: #eee; padding: 2px 6px; border-radius: 10px; vertical-align: middle; color: #888; margin-left: 5px; font-weight: normal; }
+        
+        .memory-card { 
+            background: white; border-radius: 18px; margin-bottom: 25px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.06); overflow: hidden; 
+            transition: transform 0.2s; position: relative;
+        }
+        .memory-card:active { transform: scale(0.98); }
         .memory-card img { width: 100%; display: block; object-fit: cover; max-height: 500px; }
         .memory-info { padding: 15px; }
         
@@ -27,27 +35,27 @@
         .dot-active { background-color: var(--success); animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         .hidden { display: none !important; }
-        .share-tray { display: flex; gap: 10px; margin-bottom: 10px; }
+        .share-tray { display: flex; gap: 8px; }
     </style>
 </head>
 <body>
 
-<div id="auto-status"><span id="status-dot" class="dot"></span> <span id="status-text">Not Connected</span></div>
+<div id="auto-status"><span id="status-dot" class="dot"></span> <span id="status-text">Disconnected</span></div>
 
 <header>
     <div class="share-tray">
         <button class="btn-action" onclick="sendInvite('email')">📧</button>
         <button class="btn-action" onclick="sendInvite('whatsapp')">💬</button>
     </div>
-    <h1 style="margin:0; font-size: 1.2rem; color: var(--primary);">FamilyShare</h1>
-    <button class="btn-action" onclick="logout()">Logout</button>
+    <h1 style="margin:0; font-size: 1.1rem; color: var(--primary);">FamilyShare <span id="app-version-display" class="version-badge"></span></h1>
+    <button id="logout-btn" class="btn-action" onclick="logout()">Logout</button>
 </header>
 
 <div id="feed"></div>
 
 <div id="setup-card" class="hidden" style="margin: 20px; background: white; padding: 25px; border-radius: 20px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
     <h3 style="margin-top:0">Welcome Home!</h3>
-    <p style="font-size: 0.9rem; color: #666;">Link Google Drive to auto-sync our family photos.</p>
+    <p style="font-size: 0.9rem; color: #666;">Connect to sync family memories.</p>
     <button onclick="handleAuthClick()" style="background: #4285F4; color:white; border:none; padding:12px 20px; border-radius:10px; font-weight:bold; cursor:pointer; display: flex; align-items: center; gap: 10px; margin: auto;">
         <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="18" height="18"> Link Google Account
     </button>
@@ -55,119 +63,104 @@
 
 <nav class="bottom-nav">
     <button class="btn-main" onclick="document.getElementById('imgIn').click()">+ New Memory</button>
+    <p style="font-size: 0.6rem; color: #aaa; margin: 0;">Long press to delete</p>
 </nav>
 
 <input type="file" id="imgIn" accept="image/*" class="hidden" onchange="handlePost(event)">
 
 <script>
+    // --- DYNAMIC CONFIG ---
+    const APP_VERSION = "5.6";
     const CLIENT_ID = '825926708576-1mvndhveb3qe5qhtql14dv85c5rnld74.apps.googleusercontent.com';
     const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-    let tokenClient;
-    let accessToken = localStorage.getItem('google_access_token');
-    let db;
+    const DB_NAME = "FamilyShare_DB";
 
-    // Database Initialization
-    const request = indexedDB.open("FamilyShare_AutoSync_v5", 1);
-    request.onsuccess = e => {
-        db = e.target.result;
-        loadFeed();
-        gisInit();
-    };
+    let tokenClient, accessToken = localStorage.getItem('google_access_token'), db;
 
+    // --- UI INIT ---
+    document.getElementById('app-version-display').innerText = `v${APP_VERSION}`;
+    document.getElementById('page-title').innerText = `FamilyShare v${APP_VERSION}`;
+
+    // --- DB SETUP ---
+    function openDB() {
+        return new Promise((resolve) => {
+            const request = indexedDB.open(DB_NAME, 1);
+            request.onupgradeneeded = e => {
+                const d = e.target.result;
+                if (!d.objectStoreNames.contains("memories")) d.createObjectStore("memories", { keyPath: "id" });
+            };
+            request.onsuccess = e => { db = e.target.result; resolve(); };
+        });
+    }
+
+    // --- AUTH ---
     function gisInit() {
         tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: CLIENT_ID,
-            scope: SCOPES,
-            callback: (response) => {
-                if (response.error) return console.error(response);
-                accessToken = response.access_token;
+            client_id: CLIENT_ID, scope: SCOPES,
+            callback: (res) => {
+                if (res.error) return;
+                accessToken = res.access_token;
                 localStorage.setItem('google_access_token', accessToken);
                 document.getElementById('setup-card').classList.add('hidden');
                 updateStatus("Connected", true);
                 autoSync();
             },
         });
-        if (accessToken) {
-            updateStatus("Syncing...", true);
-            autoSync();
-        } else {
-            document.getElementById('setup-card').classList.remove('hidden');
-        }
+        if (accessToken) { updateStatus("Syncing...", true); autoSync(); }
+        else { document.getElementById('setup-card').classList.remove('hidden'); }
     }
 
-    function handleAuthClick() {
-        tokenClient.requestAccessToken({prompt: 'consent'});
-    }
+    function handleAuthClick() { tokenClient.requestAccessToken({prompt: 'consent'}); }
 
-    // --- RECTIFIED LOGOUT ---
-    function logout() {
-        if(confirm("Logout and disconnect Google Drive?")) {
-            // Try to revoke at Google's end
-            if (accessToken) {
-                try {
-                    google.accounts.oauth2.revoke(accessToken, () => {});
-                } catch (e) { console.log("Token already expired"); }
-            }
-            // Clear local session regardless of Google's response
-            localStorage.removeItem('google_access_token');
-            accessToken = null;
-            location.reload();
-        }
-    }
-
-    // --- INVITE SYSTEM ---
-    function sendInvite(method) {
-        const appUrl = window.location.href;
-        const msg = `Join our Private Family Album!\n\n1. Open: ${appUrl}\n2. Click 'Link Google Account'\n3. Follow 'Advanced' to sync.`;
+    // --- TESTED CLEAN LOGOUT ---
+    async function logout() {
+        if(!confirm("Sync and Logout? This will wipe the local session for security.")) return;
         
-        if (method === 'email') {
-            window.location.href = `mailto:?subject=FamilyShare Invite&body=${encodeURIComponent(msg)}`;
-        } else {
-            window.location.href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+        const btn = document.getElementById('logout-btn');
+        btn.innerText = "Syncing...";
+        btn.disabled = true;
+
+        try { 
+            if(accessToken) await autoSync(); // Final push to cloud
+        } catch (e) { console.log("Final sync failed, proceeding to wipe."); }
+
+        // Force Revoke
+        if (accessToken) {
+            try { google.accounts.oauth2.revoke(accessToken, () => {}); } catch(e) {}
         }
+
+        // Clear Local Session
+        localStorage.removeItem('google_access_token');
+        accessToken = null;
+
+        // Hard Wipe Database
+        db.close();
+        const deleteReq = indexedDB.deleteDatabase(DB_NAME);
+        deleteReq.onsuccess = () => {
+            alert("Logged out and session wiped.");
+            location.reload();
+        };
+        deleteReq.onerror = () => location.reload();
     }
 
-    function updateStatus(text, active) {
-        document.getElementById('status-text').innerText = text;
-        document.getElementById('status-dot').className = active ? 'dot dot-active' : 'dot';
-    }
-
+    // --- MAIN LOGIC ---
     async function autoSync() {
         if (!accessToken) return;
         try {
-            const tx = db.transaction("memories", "readonly");
             const local = await new Promise(res => {
-                tx.objectStore("memories").getAll().onsuccess = e => res(e.target.result);
+                db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => res(e.target.result);
             });
-
             const search = await fetch('https://www.googleapis.com/drive/v3/files?q=name="family_ledger.json"', {
                 headers: { 'Authorization': `Bearer ${accessToken}` }
             });
             const searchRes = await search.json();
-            
             let fileId = (searchRes.files && searchRes.files.length > 0) ? searchRes.files[0].id : null;
-            let driveData = [];
-
-            if (fileId) {
-                const download = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                });
-                if (download.ok) driveData = await download.json();
-            }
-
-            const combined = new Map();
-            driveData.forEach(m => combined.set(m.id, m));
-            local.forEach(m => combined.set(m.id, m));
-            const finalData = Array.from(combined.values());
-
-            const writeTx = db.transaction("memories", "readwrite");
-            finalData.forEach(m => writeTx.objectStore("memories").put(m));
-            writeTx.oncomplete = () => loadFeed();
-
+            
+            // Upload current state
             const metadata = { name: 'family_ledger.json', mimeType: 'application/json' };
             const form = new FormData();
             form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-            form.append('file', new Blob([JSON.stringify(finalData)], { type: 'application/json' }));
+            form.append('file', new Blob([JSON.stringify(local)], { type: 'application/json' }));
 
             await fetch(fileId ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart` : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
                 method: fileId ? 'PATCH' : 'POST',
@@ -175,11 +168,20 @@
                 body: form
             });
 
+            // Download updates
+            if (fileId) {
+                const download = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                });
+                if (download.ok) {
+                    const driveData = await download.json();
+                    const writeTx = db.transaction("memories", "readwrite");
+                    driveData.forEach(m => writeTx.objectStore("memories").put(m));
+                }
+            }
             updateStatus("Up to date", false);
-        } catch (e) {
-            updateStatus("Disconnected", false);
-            document.getElementById('setup-card').classList.remove('hidden');
-        }
+            loadFeed();
+        } catch (e) { updateStatus("Disconnected", false); }
     }
 
     async function handlePost(e) {
@@ -187,26 +189,42 @@
         if (!file) return;
         updateStatus("Uploading...", true);
         const reader = new FileReader();
-        reader.onload = async event => {
-            const memory = { id: crypto.randomUUID(), image: await compress(event.target.result), timestamp: Date.now() };
+        reader.onload = async ev => {
+            const memory = { id: crypto.randomUUID(), image: await compress(ev.target.result), timestamp: Date.now() };
             const tx = db.transaction("memories", "readwrite");
             tx.objectStore("memories").add(memory);
-            tx.oncomplete = () => { loadFeed(); autoSync(); };
+            tx.oncomplete = () => autoSync();
         };
         reader.readAsDataURL(file);
     }
 
     function loadFeed() {
         const feed = document.getElementById('feed');
-        feed.innerHTML = "";
         db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => {
-            e.target.result.sort((a,b)=>b.timestamp-a.timestamp).forEach(m => {
+            const items = e.target.result.sort((a,b)=>b.timestamp-a.timestamp);
+            feed.innerHTML = items.length ? "" : `<div style="text-align:center; margin-top:50px; color:#aaa;">No photos yet.</div>`;
+            items.forEach(m => {
                 const card = document.createElement('div');
                 card.className = 'memory-card';
+                card.onmousedown = () => startPress(m.id); card.ontouchstart = () => startPress(m.id);
+                card.onmouseup = cancelPress; card.ontouchend = cancelPress;
                 card.innerHTML = `<img src="${m.image}"><div class="memory-info"><small style="color:#bbb;">${new Date(m.timestamp).toLocaleString()}</small></div>`;
                 feed.appendChild(card);
             });
         };
+    }
+
+    // --- HELPERS ---
+    let pressTimer;
+    function startPress(id) { pressTimer = window.setTimeout(() => deletePhoto(id), 1000); }
+    function cancelPress() { clearTimeout(pressTimer); }
+
+    function deletePhoto(id) {
+        if(confirm("Delete this memory for everyone?")) {
+            const tx = db.transaction("memories", "readwrite");
+            tx.objectStore("memories").delete(id);
+            tx.oncomplete = () => { loadFeed(); autoSync(); };
+        }
     }
 
     function compress(b64) {
@@ -221,6 +239,25 @@
             }
         });
     }
+
+    function updateStatus(text, active) {
+        const st = document.getElementById('status-text');
+        const dt = document.getElementById('status-dot');
+        if(st) st.innerText = text;
+        if(dt) dt.className = active ? 'dot dot-active' : 'dot';
+    }
+
+    function sendInvite(method) {
+        const msg = `Join our Private Family Album v${APP_VERSION}!\n\n1. Open: ${window.location.href}\n2. Link Google Account.`;
+        if (method === 'email') window.location.href = `mailto:?subject=FamilyShare Invite&body=${encodeURIComponent(msg)}`;
+        else window.location.href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    }
+
+    // Start App
+    openDB().then(() => {
+        loadFeed();
+        gisInit();
+    });
 </script>
 </body>
 </html>
