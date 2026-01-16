@@ -63,14 +63,14 @@
 
 <nav class="bottom-nav">
     <button class="btn-main" onclick="document.getElementById('imgIn').click()">+ New Memory</button>
-    <p style="font-size: 0.6rem; color: #aaa; margin: 0;">Long press to delete</p>
+    <p style="font-size: 0.6rem; color: #aaa; margin: 0;">Long press a photo to delete</p>
 </nav>
 
 <input type="file" id="imgIn" accept="image/*" class="hidden" onchange="handlePost(event)">
 
 <script>
-    // --- DYNAMIC CONFIG ---
-    const APP_VERSION = "5.6";
+    // --- APP CONFIG ---
+    const APP_VERSION = "5.7";
     const CLIENT_ID = '825926708576-1mvndhveb3qe5qhtql14dv85c5rnld74.apps.googleusercontent.com';
     const SCOPES = 'https://www.googleapis.com/auth/drive.file';
     const DB_NAME = "FamilyShare_DB";
@@ -81,7 +81,7 @@
     document.getElementById('app-version-display').innerText = `v${APP_VERSION}`;
     document.getElementById('page-title').innerText = `FamilyShare v${APP_VERSION}`;
 
-    // --- DB SETUP ---
+    // --- DATABASE ---
     function openDB() {
         return new Promise((resolve) => {
             const request = indexedDB.open(DB_NAME, 1);
@@ -93,7 +93,7 @@
         });
     }
 
-    // --- AUTH ---
+    // --- AUTHENTICATION ---
     function gisInit() {
         tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: CLIENT_ID, scope: SCOPES,
@@ -110,9 +110,12 @@
         else { document.getElementById('setup-card').classList.remove('hidden'); }
     }
 
-    function handleAuthClick() { tokenClient.requestAccessToken({prompt: 'consent'}); }
+    function handleAuthClick() {
+        // Forces account selection screen and breaks auto-login loop
+        tokenClient.requestAccessToken({prompt: 'select_account'});
+    }
 
-    // --- TESTED CLEAN LOGOUT ---
+    // --- NUCLEAR LOGOUT ---
     async function logout() {
         if(!confirm("Sync and Logout? This will wipe the local session for security.")) return;
         
@@ -121,29 +124,34 @@
         btn.disabled = true;
 
         try { 
-            if(accessToken) await autoSync(); // Final push to cloud
-        } catch (e) { console.log("Final sync failed, proceeding to wipe."); }
+            if(accessToken) await autoSync(); 
+        } catch (e) { console.log("Final sync failed."); }
 
-        // Force Revoke
+        // 1. Break the Auto-Login Chain
+        if (window.google && google.accounts.id) {
+            google.accounts.id.disableAutoSelect();
+        }
+
+        // 2. Revoke Access Token
         if (accessToken) {
             try { google.accounts.oauth2.revoke(accessToken, () => {}); } catch(e) {}
         }
 
-        // Clear Local Session
+        // 3. Clear Local Credentials
         localStorage.removeItem('google_access_token');
         accessToken = null;
 
-        // Hard Wipe Database
-        db.close();
+        // 4. Wipe Local Photos
+        if (db) db.close();
         const deleteReq = indexedDB.deleteDatabase(DB_NAME);
         deleteReq.onsuccess = () => {
-            alert("Logged out and session wiped.");
+            alert("Logged out. Session wiped.");
             location.reload();
         };
         deleteReq.onerror = () => location.reload();
     }
 
-    // --- MAIN LOGIC ---
+    // --- CORE SYNC ---
     async function autoSync() {
         if (!accessToken) return;
         try {
@@ -156,7 +164,7 @@
             const searchRes = await search.json();
             let fileId = (searchRes.files && searchRes.files.length > 0) ? searchRes.files[0].id : null;
             
-            // Upload current state
+            // Push local updates
             const metadata = { name: 'family_ledger.json', mimeType: 'application/json' };
             const form = new FormData();
             form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
@@ -168,7 +176,7 @@
                 body: form
             });
 
-            // Download updates
+            // Pull cloud updates
             if (fileId) {
                 const download = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
                     headers: { 'Authorization': `Bearer ${accessToken}` }
@@ -214,7 +222,7 @@
         };
     }
 
-    // --- HELPERS ---
+    // --- UTILITIES ---
     let pressTimer;
     function startPress(id) { pressTimer = window.setTimeout(() => deletePhoto(id), 1000); }
     function cancelPress() { clearTimeout(pressTimer); }
@@ -253,7 +261,7 @@
         else window.location.href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
     }
 
-    // Start App
+    // --- APP START ---
     openDB().then(() => {
         loadFeed();
         gisInit();
