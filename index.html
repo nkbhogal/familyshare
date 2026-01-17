@@ -3,262 +3,261 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title id="page-title">FamilyShare</title>
-    
+    <title>FamilyShare</title>
+
+    <meta property="og:title" content="FamilyShare - Our Private Album">
+    <meta property="og:description" content="Click to view our latest family photos and updates.">
+    <meta property="og:image" content="https://nkbhogal.github.io/icon.png">
+    <meta property="og:url" content="https://nkbhogal.github.io">
+    <meta property="og:type" content="website">
+
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="icon" type="image/png" href="icon.png">
+
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://apis.google.com/js/api.js" async defer></script>
     
     <style>
-        :root { --primary: #e63946; --secondary: #457b9d; --bg: #fdf6f0; --success: #2a9d8f; --admin: #1d3557; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding-bottom: 120px; color: #333; -webkit-tap-highlight-color: transparent; }
-        
-        header { background: white; padding: 15px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; }
-        #feed { max-width: 600px; margin: auto; padding: 10px; }
-        
-        .version-badge { font-size: 0.6rem; background: #eee; padding: 2px 6px; border-radius: 10px; cursor: pointer; color: #888; margin-left: 5px; display: inline-flex; align-items: center; gap: 4px; }
-        #admin-indicator { display: none; font-size: 0.7rem; }
-        
-        /* Secret Admin Panel */
-        #admin-panel { 
-            display: none; background: var(--admin); color: white; padding: 20px; 
-            position: fixed; top: 60px; left: 10px; right: 10px; border-radius: 15px; 
-            z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
-        }
-        .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .btn-admin-act { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; }
-
-        .memory-card { background: white; border-radius: 18px; margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.06); overflow: hidden; position: relative; }
-        .memory-card img { width: 100%; display: block; object-fit: cover; max-height: 500px; }
-        .memory-info { padding: 15px; display: flex; justify-content: space-between; align-items: center; }
-        
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; padding: 20px 0; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 -2px 15px rgba(0,0,0,0.05); z-index: 101; }
-        .btn-main { background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 30px; cursor: pointer; font-weight: bold; width: 80%; max-width: 300px; }
-        .btn-action { background: none; border: 1px solid #ddd; color: #666; padding: 6px 12px; border-radius: 15px; font-size: 0.75rem; cursor: pointer; }
-        
-        #auto-status { position: fixed; top: 70px; right: 20px; font-size: 0.7rem; background: rgba(255,255,255,0.9); padding: 5px 12px; border-radius: 20px; z-index: 200; display: flex; align-items: center; gap: 6px; }
-        .dot { height: 8px; width: 8px; background-color: #bbb; border-radius: 50%; }
-        .dot-active { background-color: var(--success); animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        /* [Existing Facebook-style CSS from v7.2 remains exactly the same] */
+        :root { --fb-blue: #1877F2; --fb-bg: #F0F2F5; --fb-white: #FFFFFF; --primary: #1877F2; }
+        body { font-family: Helvetica, Arial, sans-serif; background-color: var(--fb-bg); margin: 0; padding-bottom: 50px; color: #1c1e21; }
+        #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--fb-blue); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s ease; }
+        .splash-logo { font-size: 3rem; font-weight: bold; color: white; letter-spacing: -2px; }
+        header { background: var(--fb-blue); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .header-title { color: white; font-size: 1.5rem; font-weight: bold; cursor: pointer; }
+        #feed { max-width: 550px; margin: 15px auto; padding: 0 10px; }
+        .composer { background: var(--fb-white); border-radius: 8px; padding: 12px; margin-bottom: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .composer-top { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+        .avatar { width: 40px; height: 40px; background: #ddd; border-radius: 50%; flex-shrink: 0; }
+        #post-text { width: 100%; border: none; background: #F0F2F5; padding: 12px; border-radius: 20px; font-size: 0.95rem; outline: none; resize: none; font-family: inherit; }
+        .composer-actions { border-top: 1px solid #E4E6EB; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-photo-add { background: none; border: none; color: #45BD62; font-weight: bold; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+        .btn-post { background: var(--fb-blue); color: white; border: none; padding: 8px 25px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        #preview-container { position: relative; margin-bottom: 10px; display: none; }
+        #preview-img { width: 100%; border-radius: 8px; max-height: 300px; object-fit: cover; }
+        .memory-card { background: var(--fb-white); border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); overflow: hidden; }
+        .card-header { padding: 12px; display: flex; align-items: center; gap: 10px; }
+        .memory-card img { width: 100%; display: block; border-top: 1px solid #F0F2F5; }
+        .card-actions { padding: 8px 12px; display: flex; justify-content: space-around; border-top: 1px solid #F0F2F5; }
+        .action-btn { background: none; border: none; color: #65676b; font-weight: bold; font-size: 0.85rem; cursor: pointer; }
+        #admin-panel { display: none; background: white; padding: 20px; position: fixed; top: 60px; left: 10px; right: 10px; border-radius: 12px; z-index: 1000; box-shadow: 0 12px 28px rgba(0,0,0,0.2); border: 1px solid #ddd; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
-
-<div id="auto-status"><span id="status-dot" class="dot"></span> <span id="status-text">Disconnected</span></div>
-
-<div id="admin-panel">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h3 style="margin:0">Admin Control 🔑</h3>
-        <button onclick="toggleAdmin()" style="background:none; border:none; color:white; font-size:1.5rem;">&times;</button>
+    <div id="splash-screen"><div class="splash-logo">FamilyShare</div></div>
+    <div id="admin-panel">
+        <h3 style="margin-top:0">Admin Center 🔑</h3>
+        <button style="width:100%; padding:10px; margin-bottom:10px;" onclick="window.open('https://drive.google.com')">Master Drive</button>
+        <button style="width:100%; padding:10px; color:red;" onclick="logout()">🚨 Logout</button>
+        <button onclick="toggleAdmin()" style="width:100%; margin-top:10px; border:none; background:none; color: #1877F2;">Close</button>
     </div>
-    <div class="admin-grid">
-        <button class="btn-admin-act" onclick="sendInvite('whatsapp')">💬 Invite (WA)</button>
-        <button class="btn-admin-act" onclick="sendInvite('email')">📧 Invite (Email)</button>
-        <button class="btn-admin-act" onclick="window.open('https://drive.google.com')">📁 Open Drive</button>
-        <button class="btn-admin-act" onclick="broadcastMessage()">📣 Broadcast</button>
-        <button class="btn-admin-act" style="grid-column: span 2; background: var(--primary);" onclick="logout()">🚨 Full Nuclear Reset</button>
+
+    <header>
+        <div class="header-title" onclick="adminCheck()">FamilyShare <span id="admin-indicator" style="display:none">🔑</span></div>
+        <button style="background:none; border:none; color:white; font-weight:bold;" onclick="logout()">Logout</button>
+    </header>
+
+    <div id="feed">
+        <div id="composer-area" class="composer hidden">
+            <div class="composer-top"><div class="avatar"></div><textarea id="post-text" placeholder="Share a update..." rows="1"></textarea></div>
+            <div id="preview-container"><img id="preview-img" src=""></div>
+            <div class="composer-actions">
+                <button class="btn-photo-add" onclick="document.getElementById('imgIn').click()">🖼️ Photo</button>
+                <button id="post-btn" class="btn-post" onclick="submitPost()">Post</button>
+            </div>
+        </div>
+        <div id="memory-list"></div>
     </div>
-</div>
 
-<header>
-    <div style="width: 50px"></div>
-    <h1 style="margin:0; font-size: 1.1rem; color: var(--primary);">FamilyShare <span id="ver-tag" class="version-badge" onclick="adminCheck()">v6.0<span id="admin-indicator">🔑</span></span></h1>
-    <button id="logout-btn" class="btn-action" onclick="logout()">Logout</button>
-</header>
+    <div id="setup-card" class="hidden" style="margin: 100px 20px; background: white; padding: 30px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h2 style="color: #1877f2">See your family photos</h2>
+        <button onclick="handleAuthClick()" style="background: #1877f2; color:white; border:none; padding:12px 24px; border-radius:6px; font-weight:bold; cursor:pointer; width:100%;">Log In</button>
+    </div>
 
-<div id="feed"></div>
+    <input type="file" id="imgIn" accept="image/*" class="hidden" onchange="previewImage(event)">
 
-<div id="setup-card" class="hidden" style="margin: 20px; background: white; padding: 25px; border-radius: 20px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-    <h3>Welcome Home</h3>
-    <button onclick="handleAuthClick()" style="background: #4285F4; color:white; border:none; padding:12px 20px; border-radius:10px; font-weight:bold; cursor:pointer;">
-        Link Google Account
-    </button>
-</div>
+    <script>
+        // Use v7.2 Script logic here
+        const APP_VERSION = "7.3";
+        const ADMIN_PW = "nimda";
+        const CLIENT_ID = '825926708576-1mvndhveb3qe5qhtql14dv85c5rnld74.apps.googleusercontent.com';
+        const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+        const DB_NAME = "FamilyShare_DB";
 
-<nav class="bottom-nav">
-    <button class="btn-main" onclick="document.getElementById('imgIn').click()">+ New Memory</button>
-</nav>
+        let tokenClient, accessToken = localStorage.getItem('google_access_token'), db;
+        let selectedImageB64 = null, clickCount = 0, isAdminAuthenticated = false;
 
-<input type="file" id="imgIn" accept="image/*" class="hidden" onchange="handlePost(event)">
+        window.onload = () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                splash.style.opacity = '0';
+                setTimeout(() => splash.classList.add('hidden'), 500);
+                openDB().then(() => { loadFeed(); gisInit(); });
+            }, 5000);
+        };
 
-<script>
-    const APP_VERSION = "6.0";
-    const ADMIN_PW = "nimda";
-    const CLIENT_ID = '825926708576-1mvndhveb3qe5qhtql14dv85c5rnld74.apps.googleusercontent.com';
-    const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-    const DB_NAME = "FamilyShare_DB";
+        function openDB() {
+            return new Promise((resolve) => {
+                const request = indexedDB.open(DB_NAME, 1);
+                request.onupgradeneeded = e => {
+                    const d = e.target.result;
+                    if (!d.objectStoreNames.contains("memories")) d.createObjectStore("memories", { keyPath: "id" });
+                };
+                request.onsuccess = e => { db = e.target.result; resolve(); };
+            });
+        }
 
-    let tokenClient, accessToken = localStorage.getItem('google_access_token'), db;
-    let clickCount = 0;
-    let isAdminAuthenticated = false;
+        function gisInit() {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID, scope: SCOPES,
+                callback: (res) => {
+                    accessToken = res.access_token;
+                    localStorage.setItem('google_access_token', accessToken);
+                    updateViewState(true);
+                    autoSync();
+                },
+            });
+            updateViewState(!!accessToken);
+            if (accessToken) autoSync();
+        }
 
-    // --- SECRET ADMIN ACCESS ---
-    function adminCheck() {
-        clickCount++;
-        if (clickCount >= 5) {
-            clickCount = 0;
-            if (isAdminAuthenticated) {
-                toggleAdmin();
-            } else {
-                const pw = prompt("Enter Admin Password:");
-                if (pw === ADMIN_PW) {
+        function updateViewState(isLoggedIn) {
+            document.getElementById('setup-card').className = isLoggedIn ? 'hidden' : '';
+            document.getElementById('composer-area').className = isLoggedIn ? 'composer' : 'hidden';
+        }
+
+        function handleAuthClick() { tokenClient.requestAccessToken({prompt: 'select_account'}); }
+
+        function previewImage(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async ev => {
+                selectedImageB64 = await compress(ev.target.result);
+                document.getElementById('preview-img').src = selectedImageB64;
+                document.getElementById('preview-container').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function submitPost() {
+            const text = document.getElementById('post-text').value.trim();
+            if (!text && !selectedImageB64) return;
+            const btn = document.getElementById('post-btn');
+            btn.innerText = "Posting..."; btn.disabled = true;
+            const memory = { id: crypto.randomUUID(), text: text, image: selectedImageB64, timestamp: Date.now() };
+            const tx = db.transaction("memories", "readwrite");
+            tx.objectStore("memories").add(memory);
+            tx.oncomplete = async () => {
+                document.getElementById('post-text').value = "";
+                selectedImageB64 = null;
+                document.getElementById('preview-container').style.display = 'none';
+                btn.innerText = "Post"; btn.disabled = false;
+                await autoSync();
+                notifyFamily(text);
+            };
+        }
+
+        function notifyFamily(postText) {
+            const shortMsg = postText ? `"${postText.substring(0, 30)}..."` : "a new photo";
+            const msg = `Hey! I just posted ${shortMsg} on our FamilyShare album. Check it out: ${window.location.href}`;
+            if (confirm("Post shared! Notify the family via WhatsApp?")) {
+                window.location.href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+            }
+        }
+
+        async function autoSync() {
+            if (!accessToken) return;
+            try {
+                const local = await new Promise(res => {
+                    db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => res(e.target.result);
+                });
+                const search = await fetch('https://www.googleapis.com/drive/v3/files?q=name="family_ledger.json"', {
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                });
+                const searchRes = await search.json();
+                let fileId = (searchRes.files && searchRes.files.length > 0) ? searchRes.files[0].id : null;
+                const form = new FormData();
+                form.append('metadata', new Blob([JSON.stringify({ name: 'family_ledger.json', mimeType: 'application/json' })], { type: 'application/json' }));
+                form.append('file', new Blob([JSON.stringify(local)], { type: 'application/json' }));
+                await fetch(fileId ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart` : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                    method: fileId ? 'PATCH' : 'POST',
+                    headers: { 'Authorization': `Bearer ${accessToken}` },
+                    body: form
+                });
+                if (fileId) {
+                    const download = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+                    if (download.ok) {
+                        const driveData = await download.json();
+                        const writeTx = db.transaction("memories", "readwrite");
+                        driveData.forEach(m => writeTx.objectStore("memories").put(m));
+                    }
+                }
+                loadFeed();
+            } catch (e) { console.error(e); }
+        }
+
+        function loadFeed() {
+            const list = document.getElementById('memory-list');
+            db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => {
+                const items = e.target.result.sort((a,b)=>b.timestamp-a.timestamp);
+                list.innerHTML = "";
+                items.forEach(m => {
+                    const card = document.createElement('div');
+                    card.className = 'memory-card';
+                    let html = `<div class="card-header"><div class="avatar"></div><div style="font-size:0.9rem; font-weight:bold;">Family Member<br><span style="font-size:0.7rem; color:#65676b; font-weight:normal;">${new Date(m.timestamp).toLocaleString()}</span></div></div>`;
+                    if (m.text) html += `<div class="card-body">${m.text}</div>`;
+                    if (m.image) html += `<img src="${m.image}">`;
+                    html += `<div class="card-actions"><button class="action-btn">❤️ Love</button><button class="action-btn" onclick="deletePhoto('${m.id}')">🗑️ Remove</button></div>`;
+                    card.innerHTML = html;
+                    list.appendChild(card);
+                });
+            };
+        }
+
+        function deletePhoto(id) {
+            if(confirm("Delete this?")) {
+                const tx = db.transaction("memories", "readwrite");
+                tx.objectStore("memories").delete(id);
+                tx.oncomplete = () => autoSync();
+            }
+        }
+
+        function compress(b64) {
+            return new Promise(res => {
+                const img = new Image(); img.src = b64;
+                img.onload = () => {
+                    const cvs = document.createElement('canvas');
+                    const scale = Math.min(1, 1000 / img.width);
+                    cvs.width = img.width * scale; cvs.height = img.height * scale;
+                    cvs.getContext('2d').drawImage(img, 0, 0, cvs.width, cvs.height);
+                    res(cvs.toDataURL('image/jpeg', 0.6));
+                }
+            });
+        }
+
+        function adminCheck() {
+            clickCount++;
+            if (clickCount >= 5) {
+                clickCount = 0;
+                if (isAdminAuthenticated || prompt("Admin Code:") === ADMIN_PW) {
                     isAdminAuthenticated = true;
                     document.getElementById('admin-indicator').style.display = 'inline';
                     toggleAdmin();
-                } else {
-                    alert("Incorrect Access Code.");
                 }
             }
         }
-        setTimeout(() => { clickCount = 0; }, 3000);
-    }
 
-    function toggleAdmin() {
-        const panel = document.getElementById('admin-panel');
-        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-    }
-
-    async function broadcastMessage() {
-        const msg = prompt("Message for the family:");
-        if (msg) alert("Broadcast queued for v6.1 update.");
-    }
-
-    // --- CORE APP FUNCTIONS ---
-    function openDB() {
-        return new Promise((resolve) => {
-            const request = indexedDB.open(DB_NAME, 1);
-            request.onupgradeneeded = e => {
-                const d = e.target.result;
-                if (!d.objectStoreNames.contains("memories")) d.createObjectStore("memories", { keyPath: "id" });
-            };
-            request.onsuccess = e => { db = e.target.result; resolve(); };
-        });
-    }
-
-    function gisInit() {
-        tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: CLIENT_ID, scope: SCOPES,
-            callback: (res) => {
-                accessToken = res.access_token;
-                localStorage.setItem('google_access_token', accessToken);
-                document.getElementById('setup-card').classList.add('hidden');
-                autoSync();
-            },
-        });
-        if (accessToken) autoSync();
-        else document.getElementById('setup-card').classList.remove('hidden');
-    }
-
-    function handleAuthClick() { tokenClient.requestAccessToken({prompt: 'select_account'}); }
-
-    async function logout() {
-        if(!confirm("Nuclear Logout? Local data will be wiped.")) return;
-        if (window.google) google.accounts.id.disableAutoSelect();
-        if (accessToken) google.accounts.oauth2.revoke(accessToken, () => {});
-        localStorage.clear();
-        indexedDB.deleteDatabase(DB_NAME);
-        location.reload();
-    }
-
-    async function autoSync() {
-        if (!accessToken) return;
-        updateStatus("Syncing...", true);
-        try {
-            const local = await new Promise(res => {
-                db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => res(e.target.result);
-            });
-            const search = await fetch('https://www.googleapis.com/drive/v3/files?q=name="family_ledger.json"', {
-                headers: { 'Authorization': `Bearer ${accessToken}` }
-            });
-            const searchRes = await search.json();
-            let fileId = (searchRes.files && searchRes.files.length > 0) ? searchRes.files[0].id : null;
-            
-            const metadata = { name: 'family_ledger.json', mimeType: 'application/json' };
-            const form = new FormData();
-            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-            form.append('file', new Blob([JSON.stringify(local)], { type: 'application/json' }));
-
-            await fetch(fileId ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart` : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                method: fileId ? 'PATCH' : 'POST',
-                headers: { 'Authorization': `Bearer ${accessToken}` },
-                body: form
-            });
-
-            if (fileId) {
-                const download = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                });
-                if (download.ok) {
-                    const driveData = await download.json();
-                    const writeTx = db.transaction("memories", "readwrite");
-                    driveData.forEach(m => writeTx.objectStore("memories").put(m));
-                }
-            }
-            updateStatus("Up to date", false);
-            loadFeed();
-        } catch (e) { updateStatus("Error", false); }
-    }
-
-    async function handlePost(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = async ev => {
-            const memory = { id: crypto.randomUUID(), image: await compress(ev.target.result), timestamp: Date.now() };
-            const tx = db.transaction("memories", "readwrite");
-            tx.objectStore("memories").add(memory);
-            tx.oncomplete = () => autoSync();
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function loadFeed() {
-        const feed = document.getElementById('feed');
-        db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => {
-            const items = e.target.result.sort((a,b)=>b.timestamp-a.timestamp);
-            feed.innerHTML = items.length ? "" : `<div style="text-align:center; padding:50px; color:#ccc;">No memories yet.</div>`;
-            items.forEach(m => {
-                const card = document.createElement('div');
-                card.className = 'memory-card';
-                card.innerHTML = `<img src="${m.image}"><div class="memory-info"><small>${new Date(m.timestamp).toLocaleDateString()}</small><button class="btn-action" onclick="deletePhoto('${m.id}')">Delete</button></div>`;
-                feed.appendChild(card);
-            });
-        };
-    }
-
-    function deletePhoto(id) {
-        if(confirm("Delete this memory?")) {
-            const tx = db.transaction("memories", "readwrite");
-            tx.objectStore("memories").delete(id);
-            tx.oncomplete = () => autoSync();
+        function toggleAdmin() {
+            const p = document.getElementById('admin-panel');
+            p.style.display = p.style.display === 'block' ? 'none' : 'block';
         }
-    }
 
-    function compress(b64) {
-        return new Promise(res => {
-            const img = new Image(); img.src = b64;
-            img.onload = () => {
-                const cvs = document.createElement('canvas');
-                const scale = Math.min(1, 1000 / img.width);
-                cvs.width = img.width * scale; cvs.height = img.height * scale;
-                cvs.getContext('2d').drawImage(img, 0, 0, cvs.width, cvs.height);
-                res(cvs.toDataURL('image/jpeg', 0.6));
-            }
-        });
-    }
-
-    function updateStatus(text, active) {
-        document.getElementById('status-text').innerText = text;
-        document.getElementById('status-dot').className = active ? 'dot dot-active' : 'dot';
-    }
-
-    function sendInvite(method) {
-        const msg = `Join our Private Family Album!\n\n${window.location.href}`;
-        if (method === 'email') window.location.href = `mailto:?subject=FamilyShare&body=${encodeURIComponent(msg)}`;
-        else window.location.href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-    }
-
-    openDB().then(() => { loadFeed(); gisInit(); });
-</script>
+        function logout() {
+            localStorage.clear();
+            indexedDB.deleteDatabase(DB_NAME).onsuccess = () => location.reload();
+        }
+    </script>
 </body>
 </html>
