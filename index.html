@@ -9,79 +9,121 @@
     <script src="https://apis.google.com/js/api.js" async defer></script>
     
     <style>
-        :root { --primary: #e63946; --secondary: #457b9d; --bg: #fdf6f0; --success: #2a9d8f; }
+        :root { --primary: #e63946; --secondary: #457b9d; --bg: #fdf6f0; --success: #2a9d8f; --admin: #1d3557; }
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding-bottom: 120px; color: #333; -webkit-tap-highlight-color: transparent; }
         
         header { background: white; padding: 15px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; }
         #feed { max-width: 600px; margin: auto; padding: 10px; }
         
-        .version-badge { font-size: 0.6rem; background: #eee; padding: 2px 6px; border-radius: 10px; vertical-align: middle; color: #888; margin-left: 5px; font-weight: normal; }
+        .version-badge { font-size: 0.6rem; background: #eee; padding: 2px 6px; border-radius: 10px; cursor: pointer; color: #888; margin-left: 5px; display: inline-flex; align-items: center; gap: 4px; }
+        #admin-indicator { display: none; font-size: 0.7rem; }
         
-        .memory-card { 
-            background: white; border-radius: 18px; margin-bottom: 25px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.06); overflow: hidden; 
-            transition: transform 0.2s; position: relative;
+        /* Secret Admin Panel */
+        #admin-panel { 
+            display: none; background: var(--admin); color: white; padding: 20px; 
+            position: fixed; top: 60px; left: 10px; right: 10px; border-radius: 15px; 
+            z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
         }
-        .memory-card:active { transform: scale(0.98); }
+        .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .btn-admin-act { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; }
+
+        .memory-card { background: white; border-radius: 18px; margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.06); overflow: hidden; position: relative; }
         .memory-card img { width: 100%; display: block; object-fit: cover; max-height: 500px; }
-        .memory-info { padding: 15px; }
+        .memory-info { padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; padding: 20px 0; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 -2px 15px rgba(0,0,0,0.05); z-index: 101; }
-        .btn-main { background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 30px; cursor: pointer; font-weight: bold; font-size: 1rem; width: 80%; max-width: 300px; box-shadow: 0 4px 10px rgba(230,57,70,0.3); }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 30px; cursor: pointer; font-weight: bold; width: 80%; max-width: 300px; }
         .btn-action { background: none; border: 1px solid #ddd; color: #666; padding: 6px 12px; border-radius: 15px; font-size: 0.75rem; cursor: pointer; }
         
-        #auto-status { position: fixed; top: 70px; right: 20px; font-size: 0.7rem; background: rgba(255,255,255,0.9); padding: 5px 12px; border-radius: 20px; z-index: 200; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .dot { height: 8px; width: 8px; background-color: #bbb; border-radius: 50%; display: inline-block; }
+        #auto-status { position: fixed; top: 70px; right: 20px; font-size: 0.7rem; background: rgba(255,255,255,0.9); padding: 5px 12px; border-radius: 20px; z-index: 200; display: flex; align-items: center; gap: 6px; }
+        .dot { height: 8px; width: 8px; background-color: #bbb; border-radius: 50%; }
         .dot-active { background-color: var(--success); animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
         .hidden { display: none !important; }
-        .share-tray { display: flex; gap: 8px; }
     </style>
 </head>
 <body>
 
 <div id="auto-status"><span id="status-dot" class="dot"></span> <span id="status-text">Disconnected</span></div>
 
-<header>
-    <div class="share-tray">
-        <button class="btn-action" onclick="sendInvite('email')">📧</button>
-        <button class="btn-action" onclick="sendInvite('whatsapp')">💬</button>
+<div id="admin-panel">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0">Admin Control 🔑</h3>
+        <button onclick="toggleAdmin()" style="background:none; border:none; color:white; font-size:1.5rem;">&times;</button>
     </div>
-    <h1 style="margin:0; font-size: 1.1rem; color: var(--primary);">FamilyShare <span id="app-version-display" class="version-badge"></span></h1>
+    <div class="admin-grid">
+        <button class="btn-admin-act" onclick="sendInvite('whatsapp')">💬 Invite (WA)</button>
+        <button class="btn-admin-act" onclick="sendInvite('email')">📧 Invite (Email)</button>
+        <button class="btn-admin-act" onclick="window.open('https://drive.google.com')">📁 Open Drive</button>
+        <button class="btn-admin-act" onclick="broadcastMessage()">📣 Broadcast</button>
+        <button class="btn-admin-act" style="grid-column: span 2; background: var(--primary);" onclick="logout()">🚨 Full Nuclear Reset</button>
+    </div>
+</div>
+
+<header>
+    <div style="width: 50px"></div>
+    <h1 style="margin:0; font-size: 1.1rem; color: var(--primary);">FamilyShare <span id="ver-tag" class="version-badge" onclick="adminCheck()">v6.0<span id="admin-indicator">🔑</span></span></h1>
     <button id="logout-btn" class="btn-action" onclick="logout()">Logout</button>
 </header>
 
 <div id="feed"></div>
 
 <div id="setup-card" class="hidden" style="margin: 20px; background: white; padding: 25px; border-radius: 20px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-    <h3 style="margin-top:0">Welcome Home!</h3>
-    <p style="font-size: 0.9rem; color: #666;">Connect to sync family memories.</p>
-    <button onclick="handleAuthClick()" style="background: #4285F4; color:white; border:none; padding:12px 20px; border-radius:10px; font-weight:bold; cursor:pointer; display: flex; align-items: center; gap: 10px; margin: auto;">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="18" height="18"> Link Google Account
+    <h3>Welcome Home</h3>
+    <button onclick="handleAuthClick()" style="background: #4285F4; color:white; border:none; padding:12px 20px; border-radius:10px; font-weight:bold; cursor:pointer;">
+        Link Google Account
     </button>
 </div>
 
 <nav class="bottom-nav">
     <button class="btn-main" onclick="document.getElementById('imgIn').click()">+ New Memory</button>
-    <p style="font-size: 0.6rem; color: #aaa; margin: 0;">Long press a photo to delete</p>
 </nav>
 
 <input type="file" id="imgIn" accept="image/*" class="hidden" onchange="handlePost(event)">
 
 <script>
-    // --- APP CONFIG ---
-    const APP_VERSION = "5.7";
+    const APP_VERSION = "6.0";
+    const ADMIN_PW = "nimda";
     const CLIENT_ID = '825926708576-1mvndhveb3qe5qhtql14dv85c5rnld74.apps.googleusercontent.com';
     const SCOPES = 'https://www.googleapis.com/auth/drive.file';
     const DB_NAME = "FamilyShare_DB";
 
     let tokenClient, accessToken = localStorage.getItem('google_access_token'), db;
+    let clickCount = 0;
+    let isAdminAuthenticated = false;
 
-    // --- UI INIT ---
-    document.getElementById('app-version-display').innerText = `v${APP_VERSION}`;
-    document.getElementById('page-title').innerText = `FamilyShare v${APP_VERSION}`;
+    // --- SECRET ADMIN ACCESS ---
+    function adminCheck() {
+        clickCount++;
+        if (clickCount >= 5) {
+            clickCount = 0;
+            if (isAdminAuthenticated) {
+                toggleAdmin();
+            } else {
+                const pw = prompt("Enter Admin Password:");
+                if (pw === ADMIN_PW) {
+                    isAdminAuthenticated = true;
+                    document.getElementById('admin-indicator').style.display = 'inline';
+                    toggleAdmin();
+                } else {
+                    alert("Incorrect Access Code.");
+                }
+            }
+        }
+        setTimeout(() => { clickCount = 0; }, 3000);
+    }
 
-    // --- DATABASE ---
+    function toggleAdmin() {
+        const panel = document.getElementById('admin-panel');
+        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    }
+
+    async function broadcastMessage() {
+        const msg = prompt("Message for the family:");
+        if (msg) alert("Broadcast queued for v6.1 update.");
+    }
+
+    // --- CORE APP FUNCTIONS ---
     function openDB() {
         return new Promise((resolve) => {
             const request = indexedDB.open(DB_NAME, 1);
@@ -93,67 +135,34 @@
         });
     }
 
-    // --- AUTHENTICATION ---
     function gisInit() {
         tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: CLIENT_ID, scope: SCOPES,
             callback: (res) => {
-                if (res.error) return;
                 accessToken = res.access_token;
                 localStorage.setItem('google_access_token', accessToken);
                 document.getElementById('setup-card').classList.add('hidden');
-                updateStatus("Connected", true);
                 autoSync();
             },
         });
-        if (accessToken) { updateStatus("Syncing...", true); autoSync(); }
-        else { document.getElementById('setup-card').classList.remove('hidden'); }
+        if (accessToken) autoSync();
+        else document.getElementById('setup-card').classList.remove('hidden');
     }
 
-    function handleAuthClick() {
-        // Forces account selection screen and breaks auto-login loop
-        tokenClient.requestAccessToken({prompt: 'select_account'});
-    }
+    function handleAuthClick() { tokenClient.requestAccessToken({prompt: 'select_account'}); }
 
-    // --- NUCLEAR LOGOUT ---
     async function logout() {
-        if(!confirm("Sync and Logout? This will wipe the local session for security.")) return;
-        
-        const btn = document.getElementById('logout-btn');
-        btn.innerText = "Syncing...";
-        btn.disabled = true;
-
-        try { 
-            if(accessToken) await autoSync(); 
-        } catch (e) { console.log("Final sync failed."); }
-
-        // 1. Break the Auto-Login Chain
-        if (window.google && google.accounts.id) {
-            google.accounts.id.disableAutoSelect();
-        }
-
-        // 2. Revoke Access Token
-        if (accessToken) {
-            try { google.accounts.oauth2.revoke(accessToken, () => {}); } catch(e) {}
-        }
-
-        // 3. Clear Local Credentials
-        localStorage.removeItem('google_access_token');
-        accessToken = null;
-
-        // 4. Wipe Local Photos
-        if (db) db.close();
-        const deleteReq = indexedDB.deleteDatabase(DB_NAME);
-        deleteReq.onsuccess = () => {
-            alert("Logged out. Session wiped.");
-            location.reload();
-        };
-        deleteReq.onerror = () => location.reload();
+        if(!confirm("Nuclear Logout? Local data will be wiped.")) return;
+        if (window.google) google.accounts.id.disableAutoSelect();
+        if (accessToken) google.accounts.oauth2.revoke(accessToken, () => {});
+        localStorage.clear();
+        indexedDB.deleteDatabase(DB_NAME);
+        location.reload();
     }
 
-    // --- CORE SYNC ---
     async function autoSync() {
         if (!accessToken) return;
+        updateStatus("Syncing...", true);
         try {
             const local = await new Promise(res => {
                 db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => res(e.target.result);
@@ -164,7 +173,6 @@
             const searchRes = await search.json();
             let fileId = (searchRes.files && searchRes.files.length > 0) ? searchRes.files[0].id : null;
             
-            // Push local updates
             const metadata = { name: 'family_ledger.json', mimeType: 'application/json' };
             const form = new FormData();
             form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
@@ -176,7 +184,6 @@
                 body: form
             });
 
-            // Pull cloud updates
             if (fileId) {
                 const download = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
                     headers: { 'Authorization': `Bearer ${accessToken}` }
@@ -189,13 +196,12 @@
             }
             updateStatus("Up to date", false);
             loadFeed();
-        } catch (e) { updateStatus("Disconnected", false); }
+        } catch (e) { updateStatus("Error", false); }
     }
 
     async function handlePost(e) {
         const file = e.target.files[0];
         if (!file) return;
-        updateStatus("Uploading...", true);
         const reader = new FileReader();
         reader.onload = async ev => {
             const memory = { id: crypto.randomUUID(), image: await compress(ev.target.result), timestamp: Date.now() };
@@ -210,28 +216,21 @@
         const feed = document.getElementById('feed');
         db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => {
             const items = e.target.result.sort((a,b)=>b.timestamp-a.timestamp);
-            feed.innerHTML = items.length ? "" : `<div style="text-align:center; margin-top:50px; color:#aaa;">No photos yet.</div>`;
+            feed.innerHTML = items.length ? "" : `<div style="text-align:center; padding:50px; color:#ccc;">No memories yet.</div>`;
             items.forEach(m => {
                 const card = document.createElement('div');
                 card.className = 'memory-card';
-                card.onmousedown = () => startPress(m.id); card.ontouchstart = () => startPress(m.id);
-                card.onmouseup = cancelPress; card.ontouchend = cancelPress;
-                card.innerHTML = `<img src="${m.image}"><div class="memory-info"><small style="color:#bbb;">${new Date(m.timestamp).toLocaleString()}</small></div>`;
+                card.innerHTML = `<img src="${m.image}"><div class="memory-info"><small>${new Date(m.timestamp).toLocaleDateString()}</small><button class="btn-action" onclick="deletePhoto('${m.id}')">Delete</button></div>`;
                 feed.appendChild(card);
             });
         };
     }
 
-    // --- UTILITIES ---
-    let pressTimer;
-    function startPress(id) { pressTimer = window.setTimeout(() => deletePhoto(id), 1000); }
-    function cancelPress() { clearTimeout(pressTimer); }
-
     function deletePhoto(id) {
-        if(confirm("Delete this memory for everyone?")) {
+        if(confirm("Delete this memory?")) {
             const tx = db.transaction("memories", "readwrite");
             tx.objectStore("memories").delete(id);
-            tx.oncomplete = () => { loadFeed(); autoSync(); };
+            tx.oncomplete = () => autoSync();
         }
     }
 
@@ -249,23 +248,17 @@
     }
 
     function updateStatus(text, active) {
-        const st = document.getElementById('status-text');
-        const dt = document.getElementById('status-dot');
-        if(st) st.innerText = text;
-        if(dt) dt.className = active ? 'dot dot-active' : 'dot';
+        document.getElementById('status-text').innerText = text;
+        document.getElementById('status-dot').className = active ? 'dot dot-active' : 'dot';
     }
 
     function sendInvite(method) {
-        const msg = `Join our Private Family Album v${APP_VERSION}!\n\n1. Open: ${window.location.href}\n2. Link Google Account.`;
-        if (method === 'email') window.location.href = `mailto:?subject=FamilyShare Invite&body=${encodeURIComponent(msg)}`;
+        const msg = `Join our Private Family Album!\n\n${window.location.href}`;
+        if (method === 'email') window.location.href = `mailto:?subject=FamilyShare&body=${encodeURIComponent(msg)}`;
         else window.location.href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
     }
 
-    // --- APP START ---
-    openDB().then(() => {
-        loadFeed();
-        gisInit();
-    });
+    openDB().then(() => { loadFeed(); gisInit(); });
 </script>
 </body>
 </html>
