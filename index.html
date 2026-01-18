@@ -3,129 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>FamilyShare Admin</title>
+    <title>FamilyShare Pro</title>
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://apis.google.com/js/api.js" async defer></script>
     
     <style>
         :root { 
-            --fb-blue: #1877F2; 
+            --primary: #1877F2; 
             --admin-blue: #1d3557; 
             --danger: #d90429;
             --fb-bg: #F0F2F5; 
             --fb-white: #FFFFFF; 
+            --accent: #45BD62;
         }
         
-        body { font-family: 'Segoe UI', Helvetica, Arial, sans-serif; background-color: var(--fb-bg); margin: 0; padding: 0; overflow-x: hidden; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--fb-bg); margin: 0; padding: 0; overflow-x: hidden; }
 
-        /* RHS ADMIN SIDEBAR */
+        /* LHS ADMIN SIDEBAR - PRO SUITE */
         #admin-sidebar {
-            position: fixed; top: 0; right: -320px; width: 300px; height: 100%;
-            background: var(--admin-blue); color: white; padding: 20px;
-            box-shadow: -5px 0 15px rgba(0,0,0,0.2); z-index: 2000;
-            transition: right 0.4s cubic-bezier(0.075, 0.82, 0.165, 1);
-            display: flex; flex-direction: column;
+            position: fixed; top: 0; left: -340px; width: 320px; height: 100%;
+            background: var(--admin-blue); color: white; padding: 15px;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.3); z-index: 2000;
+            transition: left 0.4s ease; overflow-y: auto;
         }
-        #admin-sidebar.open { right: 0; }
-        #admin-sidebar h2 { font-size: 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 20px; }
+        #admin-sidebar.open { left: 0; }
+        .sidebar-section { background: rgba(255,255,255,0.05); border-radius: 10px; padding: 12px; margin-bottom: 15px; }
+        .sidebar-label { font-size: 0.7rem; font-weight: bold; color: rgba(255,255,255,0.5); letter-spacing: 1px; margin-bottom: 8px; display: block; }
 
         .admin-btn {
-            width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-            color: white; padding: 12px; border-radius: 8px; margin-bottom: 10px;
-            cursor: pointer; text-align: left; font-weight: 500; display: flex; align-items: center; gap: 10px;
+            width: 100%; background: var(--primary); color: white; border: none; padding: 10px; 
+            border-radius: 6px; cursor: pointer; font-weight: bold; margin-bottom: 5px; font-size: 0.85rem;
         }
-        .admin-btn:hover { background: rgba(255,255,255,0.2); }
-        .admin-btn.danger { background: var(--danger); border: none; margin-top: auto; }
+        .admin-btn.outline { background: transparent; border: 1px solid rgba(255,255,255,0.2); }
+        .admin-btn.danger { background: var(--danger); }
 
-        /* HEADER */
-        header { 
-            background: var(--fb-blue); padding: 10px 20px; display: flex; 
-            justify-content: space-between; align-items: center; position: sticky; 
-            top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); height: 60px;
-        }
-        .header-title { color: white; font-size: 1.4rem; font-weight: bold; margin: 0; }
-        .ver-badge { font-size: 0.8rem; background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 12px; color: white; cursor: pointer; }
+        /* ANNOUNCEMENT BANNER */
+        #announcement-bar { background: #fff3cd; color: #856404; padding: 8px 15px; text-align: center; font-size: 0.85rem; font-weight: bold; border-bottom: 1px solid #ffeeba; display: none; }
 
-        /* FEED & CARDS */
+        /* HEADER & FEED */
+        header { background: var(--primary); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); height: 60px; color: white; }
+        .header-title { font-size: 1.4rem; font-weight: bold; }
+        .ver-badge { font-size: 0.8rem; background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 12px; cursor: pointer; }
+
         #feed { max-width: 600px; margin: 20px auto; padding: 0 15px; }
-        .memory-card { background: white; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden; position: relative; }
-        .card-img { width: 100%; display: block; border-bottom: 1px solid #eee; }
-        
-        /* HIGH VISIBILITY ACTION BAR */
-        .card-overlay-actions {
-            display: flex; justify-content: flex-end; gap: 10px; padding: 12px; background: #fff;
-        }
-        .action-circle {
-            width: 40px; height: 40px; border-radius: 50%; border: none;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: transform 0.2s; font-size: 1.2rem;
-        }
-        .action-circle:hover { transform: scale(1.1); }
-        .btn-download { background: #e9ecef; color: #495057; }
-        .btn-delete { background: #ffe3e3; color: var(--danger); border: 1px solid #ffa8a8; }
+        .memory-card { background: white; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden; }
+        .card-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 12px; border-top: 1px solid #f0f2f5; }
+        .action-icon { background: #f0f2f5; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 1rem; }
 
-        /* SETUP CARD */
-        #setup-card { margin: 100px auto; max-width: 400px; background: white; padding: 40px; border-radius: 15px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .hidden { display: none !important; }
+        input[type="text"], textarea { width: 100%; border-radius: 5px; border: 1px solid #ddd; padding: 8px; box-sizing: border-box; font-family: inherit; }
     </style>
 </head>
 <body>
 
+<div id="announcement-bar"></div>
+
 <div id="admin-sidebar">
-    <h2>Admin Controls 🔑</h2>
-    <div style="margin-bottom: 20px;">
-        <label style="font-size: 0.75rem; opacity: 0.7;">INVITE CODE</label>
-        <input type="text" id="inv-code" value="Family2026" style="width:100%; padding:8px; margin-top:5px; border-radius:5px; border:none;">
+    <h2 style="margin-top:0">Admin Pro 🔑</h2>
+
+    <div class="sidebar-section">
+        <span class="sidebar-label">1. USER ACCESS LOG</span>
+        <div id="user-list" style="max-height: 80px; overflow-y: auto; font-size: 0.75rem;">
+            No activity tracked yet.
+        </div>
     </div>
-    <button class="admin-btn" onclick="shareInvite('whatsapp')"><span>💬</span> Invite via WhatsApp</button>
-    <button class="admin-btn" onclick="window.open('https://drive.google.com')"><span>📂</span> Google Drive Folder</button>
-    <button class="admin-btn" onclick="autoSync()"><span>🔄</span> Force Cloud Sync</button>
-    
-    <button class="admin-btn danger" onclick="logout()"><span>🚨</span> Full System Reset</button>
-    <button onclick="toggleSidebar()" style="background:none; border:none; color:white; margin-top:15px; cursor:pointer; opacity:0.6;">Close Sidebar →</button>
+
+    <div class="sidebar-section">
+        <span class="sidebar-label">2. BROADCAST MESSAGE</span>
+        <input type="text" id="ann-input" placeholder="Type announcement...">
+        <button class="admin-btn" style="margin-top:8px;" onclick="updateAnnouncement()">Post Broadcast</button>
+    </div>
+
+    <div class="sidebar-section">
+        <span class="sidebar-label">3. BRANDING & THEME</span>
+        <div style="display:flex; gap:5px;">
+            <input type="color" id="theme-color" value="#1877F2" onchange="updateTheme(this.value)">
+            <input type="text" id="family-name" placeholder="Family Name" onchange="updateBranding(this.value)">
+        </div>
+    </div>
+
+    <div class="sidebar-section">
+        <span class="sidebar-label">4. STORAGE & MODERATION</span>
+        <div style="font-size:0.75rem; margin-bottom:8px;">
+            DB Size: <span id="db-size-pro">0 KB</span>
+        </div>
+        <button class="admin-btn outline" onclick="openJsonInDrive()">Open DB in Google Drive</button>
+    </div>
+
+    <div class="sidebar-section">
+        <span class="sidebar-label">5. BACKUP & EXPORT</span>
+        <button class="admin-btn outline" onclick="exportData()">Export Full JSON Backup</button>
+    </div>
+
+    <button class="admin-btn danger" onclick="logout()">🚨 Nuclear Reset</button>
+    <button onclick="toggleSidebar()" style="background:none; border:none; color:white; margin-top:10px; cursor:pointer; width:100%; opacity:0.6;">← Close Sidebar</button>
 </div>
 
-<header>
-    <div class="header-title">FamilyShare</div>
-    <div id="ver-tag" class="ver-badge" onclick="adminCheck()">v8.5 <span id="admin-indicator" style="display:none">🔑</span></div>
+<header id="main-header">
+    <div class="header-title" id="display-name">FamilyShare</div>
+    <div id="ver-tag" class="ver-badge" onclick="adminCheck()">v9.0 <span id="admin-indicator" style="display:none">🔑</span></div>
 </header>
 
 <div id="feed">
-    <div id="composer-area" class="hidden" style="background:white; padding:15px; border-radius:12px; margin-bottom:20px; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
-        <textarea id="post-text" placeholder="Share a memory..." style="width:100%; border:none; background:#f0f2f5; padding:12px; border-radius:10px; outline:none; font-family:inherit;"></textarea>
+    <div id="composer-area" class="hidden" style="background:white; padding:15px; border-radius:12px; margin-bottom:20px;">
+        <textarea id="post-text" placeholder="Share a update..." rows="2"></textarea>
         <div style="display:flex; justify-content:space-between; margin-top:10px;">
-            <button onclick="document.getElementById('imgIn').click()" style="background:none; border:none; color:#2a9d8f; font-weight:bold; cursor:pointer;">+ Add Photo</button>
-            <button onclick="submitPost()" style="background:var(--fb-blue); color:white; border:none; padding:8px 20px; border-radius:5px; font-weight:bold;">Post</button>
+            <button onclick="document.getElementById('imgIn').click()" style="background:none; border:none; color:var(--accent); font-weight:bold; cursor:pointer;">+ Photo</button>
+            <button class="admin-btn" style="width:auto; padding:8px 25px;" onclick="submitPost()">Post</button>
         </div>
     </div>
     <div id="memory-list"></div>
 </div>
 
-<div id="setup-card" class="hidden">
-    <img src="icon.png" style="width:80px; margin-bottom:20px;">
-    <h2>Welcome Home</h2>
-    <button onclick="handleAuthClick()" style="background:var(--fb-blue); color:white; border:none; padding:15px 30px; border-radius:8px; width:100%; font-weight:bold;">Link Google Account</button>
+<div id="setup-card" class="hidden" style="margin: 100px auto; max-width: 380px; background: white; padding: 40px; border-radius: 15px; text-align: center;">
+    <h2>Family Album</h2>
+    <p>Sign in with Google to join the family.</p>
+    <button id="login-trigger-btn" onclick="handleAuthClick()" class="admin-btn" style="width:100%; padding:15px;">Login with Google</button>
 </div>
 
 <input type="file" id="imgIn" accept="image/*" class="hidden" onchange="handleFile(event)">
 
 <script>
-    const APP_VERSION = "8.5";
     const ADMIN_PW = "nimda";
     const CLIENT_ID = '825926708576-1mvndhveb3qe5qhtql14dv85c5rnld74.apps.googleusercontent.com';
     const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-    const DB_NAME = "FamilyShare_DB";
+    const DB_NAME = "FamilyShare_Pro_DB";
 
     let tokenClient, accessToken = localStorage.getItem('google_access_token'), db;
     let isAdmin = (sessionStorage.getItem('isAdmin') === 'true');
     let userEmail = localStorage.getItem('user_email') || "";
     let selectedImageB64 = null;
 
-    // --- APP START ---
-    window.onload = () => {
-        openDB().then(() => { loadFeed(); gisInit(); });
-    };
+    window.onload = () => { openDB().then(() => { loadFeed(); gisInit(); applySavedBranding(); }); };
 
     function openDB() {
         return new Promise((res) => {
@@ -135,6 +145,61 @@
         });
     }
 
+    // --- 1. USER TRACKING ---
+    function trackUser(email) {
+        let users = JSON.parse(localStorage.getItem('tracked_users') || "[]");
+        if(!users.includes(email)) users.push(email);
+        localStorage.setItem('tracked_users', JSON.stringify(users));
+        renderUserLog();
+    }
+    function renderUserLog() {
+        const users = JSON.parse(localStorage.getItem('tracked_users') || "[]");
+        document.getElementById('user-list').innerHTML = users.map(u => `<div>👤 ${u}</div>`).join('') || "No users yet.";
+    }
+
+    // --- 2. ANNOUNCEMENTS ---
+    function updateAnnouncement() {
+        const msg = document.getElementById('ann-input').value;
+        localStorage.setItem('family_announcement', msg);
+        displayAnnouncement();
+    }
+    function displayAnnouncement() {
+        const bar = document.getElementById('announcement-bar');
+        const msg = localStorage.getItem('family_announcement');
+        if(msg) { bar.innerText = msg; bar.style.display = 'block'; }
+        else { bar.style.display = 'none'; }
+    }
+
+    // --- 3. BRANDING ---
+    function updateTheme(color) {
+        document.documentElement.style.setProperty('--primary', color);
+        localStorage.setItem('theme_color', color);
+    }
+    function updateBranding(name) {
+        document.getElementById('display-name').innerText = name;
+        localStorage.setItem('family_name', name);
+    }
+    function applySavedBranding() {
+        const color = localStorage.getItem('theme_color');
+        const name = localStorage.getItem('family_name');
+        if(color) updateTheme(color);
+        if(name) updateBranding(name);
+        displayAnnouncement();
+        renderUserLog();
+    }
+
+    // --- 5. EXPORT ---
+    function exportData() {
+        db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => {
+            const blob = new Blob([JSON.stringify(e.target.result)], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `FamilyShare_Backup_${Date.now()}.json`;
+            a.click();
+        };
+    }
+
+    // --- CORE APP LOGIC ---
     function gisInit() {
         tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: CLIENT_ID, scope: SCOPES,
@@ -142,9 +207,10 @@
                 accessToken = res.access_token;
                 localStorage.setItem('google_access_token', accessToken);
                 if(!userEmail) {
-                    userEmail = prompt("Enter your Name/Email for posting:");
+                    userEmail = prompt("Your name for the family album:");
                     localStorage.setItem('user_email', userEmail);
                 }
+                trackUser(userEmail);
                 updateViewState(true);
                 autoSync();
             },
@@ -159,43 +225,48 @@
         if(isAdmin) document.getElementById('admin-indicator').style.display = 'inline';
     }
 
-    function toggleSidebar() {
-        document.getElementById('admin-sidebar').classList.toggle('open');
-    }
+    function toggleSidebar() { document.getElementById('admin-sidebar').classList.toggle('open'); }
 
-    // --- ADMIN ACCESS ---
     let clicks = 0;
     function adminCheck() {
         clicks++;
         if (clicks >= 5) {
             clicks = 0;
             if (isAdmin || prompt("Admin Password:") === ADMIN_PW) {
-                isAdmin = true;
-                sessionStorage.setItem('isAdmin', 'true');
+                isAdmin = true; sessionStorage.setItem('isAdmin', 'true');
                 document.getElementById('admin-indicator').style.display = 'inline';
                 toggleSidebar();
-                loadFeed();
             }
         }
     }
 
-    // --- PHOTO ACTIONS (DOWNLOAD & DELETE) ---
-    function downloadImg(b64, name) {
-        const link = document.createElement('a');
-        link.href = b64;
-        link.download = `FamilyShare_${name || 'Memory'}.jpg`;
-        link.click();
+    async function autoSync() {
+        if (!accessToken) return;
+        try {
+            const local = await new Promise(res => {
+                db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => res(e.target.result);
+            });
+            document.getElementById('db-size-pro').innerText = (JSON.stringify(local).length / 1024).toFixed(1) + " KB";
+            
+            const search = await fetch('https://www.googleapis.com/drive/v3/files?q=name="family_ledger_pro.json"', {
+                headers: { 'Authorization': `Bearer ${accessToken}` }
+            });
+            const searchRes = await search.json();
+            let fileId = (searchRes.files && searchRes.files.length > 0) ? searchRes.files[0].id : null;
+            
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify({ name: 'family_ledger_pro.json', mimeType: 'application/json' })], { type: 'application/json' }));
+            form.append('file', new Blob([JSON.stringify(local)], { type: 'application/json' }));
+            
+            await fetch(fileId ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart` : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                method: fileId ? 'PATCH' : 'POST',
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+                body: form
+            });
+            loadFeed();
+        } catch (e) { console.error(e); }
     }
 
-    function deletePhoto(id) {
-        if(confirm("Permanently delete this memory?")) {
-            const tx = db.transaction("memories", "readwrite");
-            tx.objectStore("memories").delete(id);
-            tx.oncomplete = () => autoSync();
-        }
-    }
-
-    // --- FEED LOADING ---
     function loadFeed() {
         const list = document.getElementById('memory-list');
         db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => {
@@ -204,40 +275,25 @@
             items.forEach(m => {
                 const card = document.createElement('div');
                 card.className = 'memory-card';
-                
-                // Show delete only if Admin or Owner
-                const showDelete = isAdmin || (m.owner === userEmail);
-                
                 card.innerHTML = `
-                    <div style="padding:12px; display:flex; align-items:center; gap:10px;">
-                        <div style="width:36px; height:36px; background:#ddd; border-radius:50%"></div>
-                        <div style="font-size:0.9rem; font-weight:bold;">${m.owner || 'Family'}<br>
-                        <span style="font-size:0.75rem; color:#888; font-weight:normal;">${new Date(m.timestamp).toLocaleString()}</span></div>
-                    </div>
-                    ${m.text ? `<div style="padding:0 12px 12px;">${m.text}</div>` : ""}
-                    ${m.image ? `<img src="${m.image}" class="card-img">` : ""}
-                    <div class="card-overlay-actions">
-                        <button class="action-circle btn-download" onclick="downloadImg('${m.image}', '${m.timestamp}')" title="Download Image">⬇️</button>
-                        ${showDelete ? `<button class="action-circle btn-delete" onclick="deletePhoto('${m.id}')" title="Delete Forever">🗑️</button>` : ""}
-                    </div>
-                `;
+                    <div style="padding:12px; font-weight:bold; font-size:0.9rem;">${m.owner} <span style="font-weight:normal; color:#888; font-size:0.75rem;">• ${new Date(m.timestamp).toLocaleDateString()}</span></div>
+                    ${m.text ? `<div style="padding:0 12px 10px;">${m.text}</div>` : ""}
+                    ${m.image ? `<img src="${m.image}" style="width:100%">` : ""}
+                    <div class="card-actions">
+                        <button class="action-icon" onclick="downloadImg('${m.image}')">⬇️</button>
+                        ${isAdmin || m.owner === userEmail ? `<button class="action-icon" onclick="deletePhoto('${m.id}')">🗑️</button>` : ""}
+                    </div>`;
                 list.appendChild(card);
             });
         };
     }
 
-    // --- UTILITIES ---
     async function submitPost() {
-        const text = document.getElementById('post-text').value.trim();
-        if(!text && !selectedImageB64) return;
+        const text = document.getElementById('post-text').value;
         const memory = { id: crypto.randomUUID(), text, image: selectedImageB64, timestamp: Date.now(), owner: userEmail };
         const tx = db.transaction("memories", "readwrite");
         tx.objectStore("memories").add(memory);
-        tx.oncomplete = () => {
-            document.getElementById('post-text').value = "";
-            selectedImageB64 = null;
-            autoSync();
-        };
+        tx.oncomplete = () => { document.getElementById('post-text').value = ""; selectedImageB64 = null; autoSync(); };
     }
 
     function handleFile(e) {
@@ -250,54 +306,19 @@
                 cvs.width = img.width*scale; cvs.height = img.height*scale;
                 cvs.getContext('2d').drawImage(img, 0,0, cvs.width, cvs.height);
                 selectedImageB64 = cvs.toDataURL('image/jpeg', 0.7);
-                alert("Photo attached!");
             }
         };
         reader.readAsDataURL(e.target.files[0]);
     }
 
-    async function autoSync() {
-        if (!accessToken) return;
-        try {
-            const local = await new Promise(res => {
-                db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => res(e.target.result);
-            });
-            const search = await fetch('https://www.googleapis.com/drive/v3/files?q=name="family_ledger.json"', {
-                headers: { 'Authorization': `Bearer ${accessToken}` }
-            });
-            const searchRes = await search.json();
-            let fileId = (searchRes.files && searchRes.files.length > 0) ? searchRes.files[0].id : null;
-            const form = new FormData();
-            form.append('metadata', new Blob([JSON.stringify({ name: 'family_ledger.json', mimeType: 'application/json' })], { type: 'application/json' }));
-            form.append('file', new Blob([JSON.stringify(local)], { type: 'application/json' }));
-            await fetch(fileId ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart` : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                method: fileId ? 'PATCH' : 'POST',
-                headers: { 'Authorization': `Bearer ${accessToken}` },
-                body: form
-            });
-            if (fileId) {
-                const download = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
-                if (download.ok) {
-                    const driveData = await download.json();
-                    const writeTx = db.transaction("memories", "readwrite");
-                    driveData.forEach(m => writeTx.objectStore("memories").put(m));
-                }
-            }
-            loadFeed();
-        } catch (e) { console.error(e); }
-    }
-
-    function shareInvite(plat) {
-        const code = document.getElementById('inv-code').value;
-        const msg = `Join our family album! App: ${window.location.href} Code: ${code}`;
-        if(plat === 'whatsapp') window.location.href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-    }
-
+    function downloadImg(b64) { const a = document.createElement('a'); a.href = b64; a.download = "FamilyMemory.jpg"; a.click(); }
+    function deletePhoto(id) { if(confirm("Delete?")) { const tx = db.transaction("memories", "readwrite"); tx.objectStore("memories").delete(id); tx.oncomplete = () => autoSync(); } }
+    function logout() { localStorage.clear(); sessionStorage.clear(); location.reload(); }
     function handleAuthClick() { tokenClient.requestAccessToken({prompt: 'select_account'}); }
-    
-    function logout() {
-        localStorage.clear(); sessionStorage.clear();
-        indexedDB.deleteDatabase(DB_NAME).onsuccess = () => location.reload();
+    async function openJsonInDrive() {
+        const search = await fetch('https://www.googleapis.com/drive/v3/files?q=name="family_ledger_pro.json"', { headers: { 'Authorization': `Bearer ${accessToken}` } });
+        const res = await search.json();
+        if(res.files && res.files[0]) window.open(`https://drive.google.com/file/d/${res.files[0].id}/view`);
     }
 </script>
 </body>
