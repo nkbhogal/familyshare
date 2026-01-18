@@ -3,118 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>FamilyShare</title>
-
-    <meta property="og:title" content="FamilyShare - Our Private Album">
-    <meta property="og:image" content="icon.png"> 
-    <link rel="icon" type="image/png" href="icon.png">
-    <link rel="apple-touch-icon" href="icon.png">
+    <title>FamilyShare Admin</title>
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://apis.google.com/js/api.js" async defer></script>
     
     <style>
-        /* [All Facebook-style CSS remains identical to v7.9] */
-        :root { --fb-blue: #1877F2; --admin-blue: #1d3557; --fb-bg: #F0F2F5; --fb-white: #FFFFFF; }
-        body { font-family: Helvetica, Arial, sans-serif; background-color: var(--fb-bg); margin: 0; padding-bottom: 50px; color: #1c1e21; }
-        #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #FFFFFF; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.8s ease; }
-        .splash-content { text-align: center; }
-        .splash-icon { width: 150px; height: 150px; object-fit: contain; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .splash-text { font-size: 2rem; font-weight: bold; color: var(--fb-blue); letter-spacing: -1px; }
-        header { background: var(--fb-blue); padding: 10px 0; display: grid; grid-template-columns: 80px 1fr 80px; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); min-height: 65px; }
-        .header-center { grid-column: 2; text-align: center; display: flex; flex-direction: column; align-items: center; }
+        :root { 
+            --fb-blue: #1877F2; 
+            --admin-blue: #1d3557; 
+            --danger: #d90429;
+            --fb-bg: #F0F2F5; 
+            --fb-white: #FFFFFF; 
+        }
+        
+        body { font-family: 'Segoe UI', Helvetica, Arial, sans-serif; background-color: var(--fb-bg); margin: 0; padding: 0; overflow-x: hidden; }
+
+        /* RHS ADMIN SIDEBAR */
+        #admin-sidebar {
+            position: fixed; top: 0; right: -320px; width: 300px; height: 100%;
+            background: var(--admin-blue); color: white; padding: 20px;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.2); z-index: 2000;
+            transition: right 0.4s cubic-bezier(0.075, 0.82, 0.165, 1);
+            display: flex; flex-direction: column;
+        }
+        #admin-sidebar.open { right: 0; }
+        #admin-sidebar h2 { font-size: 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 20px; }
+
+        .admin-btn {
+            width: 100%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            color: white; padding: 12px; border-radius: 8px; margin-bottom: 10px;
+            cursor: pointer; text-align: left; font-weight: 500; display: flex; align-items: center; gap: 10px;
+        }
+        .admin-btn:hover { background: rgba(255,255,255,0.2); }
+        .admin-btn.danger { background: var(--danger); border: none; margin-top: auto; }
+
+        /* HEADER */
+        header { 
+            background: var(--fb-blue); padding: 10px 20px; display: flex; 
+            justify-content: space-between; align-items: center; position: sticky; 
+            top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); height: 60px;
+        }
         .header-title { color: white; font-size: 1.4rem; font-weight: bold; margin: 0; }
-        .ver-btn { font-size: 0.9rem; color: white; background: rgba(0,0,0,0.2); padding: 4px 12px; border-radius: 15px; cursor: pointer; border: none; margin-top: 5px; font-weight: bold; }
-        .btn-logout-header { grid-column: 3; background: rgba(255,255,255,0.2) !important; border: none; color: white !important; padding: 6px; margin-right: 10px; border-radius: 5px; font-size: 0.8rem; }
-        #feed { max-width: 550px; margin: 15px auto; padding: 0 10px; }
-        .composer { background: var(--fb-white); border-radius: 8px; padding: 12px; margin-bottom: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .memory-card { background: var(--fb-white); border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); overflow: hidden; }
-        #admin-panel { display: none; background: white; padding: 25px; position: fixed; top: 80px; left: 15px; right: 15px; border-radius: 12px; z-index: 1000; box-shadow: 0 12px 28px rgba(0,0,0,0.2); border: 2px solid var(--admin-blue); text-align: center; }
+        .ver-badge { font-size: 0.8rem; background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 12px; color: white; cursor: pointer; }
+
+        /* FEED & CARDS */
+        #feed { max-width: 600px; margin: 20px auto; padding: 0 15px; }
+        .memory-card { background: white; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden; position: relative; }
+        .card-img { width: 100%; display: block; border-bottom: 1px solid #eee; }
+        
+        /* HIGH VISIBILITY ACTION BAR */
+        .card-overlay-actions {
+            display: flex; justify-content: flex-end; gap: 10px; padding: 12px; background: #fff;
+        }
+        .action-circle {
+            width: 40px; height: 40px; border-radius: 50%; border: none;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: transform 0.2s; font-size: 1.2rem;
+        }
+        .action-circle:hover { transform: scale(1.1); }
+        .btn-download { background: #e9ecef; color: #495057; }
+        .btn-delete { background: #ffe3e3; color: var(--danger); border: 1px solid #ffa8a8; }
+
+        /* SETUP CARD */
+        #setup-card { margin: 100px auto; max-width: 400px; background: white; padding: 40px; border-radius: 15px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .hidden { display: none !important; }
-        .guest-badge { background: #eee; color: #666; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; margin-bottom: 10px; display: inline-block; }
-        button:enabled { background-color: var(--admin-blue) !important; color: white !important; cursor: pointer; border: none; border-radius: 8px; }
     </style>
 </head>
 <body>
 
-<div id="splash-screen">
-    <div class="splash-content">
-        <img src="icon.png" class="splash-icon" alt="FamilyShare Icon" onerror="this.src='https://via.placeholder.com/150?text=FamilyShare'">
-        <div class="splash-text">FamilyShare</div>
+<div id="admin-sidebar">
+    <h2>Admin Controls 🔑</h2>
+    <div style="margin-bottom: 20px;">
+        <label style="font-size: 0.75rem; opacity: 0.7;">INVITE CODE</label>
+        <input type="text" id="inv-code" value="Family2026" style="width:100%; padding:8px; margin-top:5px; border-radius:5px; border:none;">
     </div>
-</div>
-
-<div id="admin-panel">
-    <h3 style="color:var(--admin-blue); margin-top:0;">Admin Session Active 🔑</h3>
-    <button style="width:100%; padding:14px; margin-bottom:12px;" onclick="window.open('https://drive.google.com')">View Master File</button>
-    <button style="width:100%; padding:14px; background-color: #e63946 !important;" onclick="logout()">🚨 Full Nuclear Logout</button>
-    <button onclick="toggleAdmin()" style="margin-top:15px; border:none; background:none !important; color: var(--fb-blue) !important; font-weight:bold;">Close Admin Menu</button>
+    <button class="admin-btn" onclick="shareInvite('whatsapp')"><span>💬</span> Invite via WhatsApp</button>
+    <button class="admin-btn" onclick="window.open('https://drive.google.com')"><span>📂</span> Google Drive Folder</button>
+    <button class="admin-btn" onclick="autoSync()"><span>🔄</span> Force Cloud Sync</button>
+    
+    <button class="admin-btn danger" onclick="logout()"><span>🚨</span> Full System Reset</button>
+    <button onclick="toggleSidebar()" style="background:none; border:none; color:white; margin-top:15px; cursor:pointer; opacity:0.6;">Close Sidebar →</button>
 </div>
 
 <header>
-    <div></div>
-    <div class="header-center">
-        <div class="header-title">FamilyShare</div>
-        <button id="ver-tag" class="ver-btn" onclick="adminCheck()">v8.0 <span id="admin-indicator" style="display:none">🔑</span></button>
-    </div>
-    <button id="logout-btn" class="btn-logout-header hidden" onclick="logout()">Logout</button>
+    <div class="header-title">FamilyShare</div>
+    <div id="ver-tag" class="ver-badge" onclick="adminCheck()">v8.5 <span id="admin-indicator" style="display:none">🔑</span></div>
 </header>
 
 <div id="feed">
-    <div id="role-display" style="text-align: center;"></div>
-    <div id="composer-area" class="composer hidden">
-        <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
-            <div style="width:40px; height:40px; background:#ddd; border-radius:50%"></div>
-            <textarea id="post-text" placeholder="Share a family update..." rows="1" style="width:100%; border:none; background:#F0F2F5; padding:12px; border-radius:20px; outline:none; resize:none;"></textarea>
-        </div>
-        <div id="preview-container" style="display:none; margin-bottom:10px;"><img id="preview-img" style="width:100%; border-radius:8px;"></div>
-        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #eee; padding-top:10px;">
-            <button onclick="document.getElementById('imgIn').click()" style="background:none !important; border:none; color:#45BD62 !important; font-weight:bold; cursor:pointer;">🖼️ Photo</button>
-            <button id="post-btn" style="padding:8px 25px; font-weight:bold;" onclick="submitPost()">Post</button>
+    <div id="composer-area" class="hidden" style="background:white; padding:15px; border-radius:12px; margin-bottom:20px; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+        <textarea id="post-text" placeholder="Share a memory..." style="width:100%; border:none; background:#f0f2f5; padding:12px; border-radius:10px; outline:none; font-family:inherit;"></textarea>
+        <div style="display:flex; justify-content:space-between; margin-top:10px;">
+            <button onclick="document.getElementById('imgIn').click()" style="background:none; border:none; color:#2a9d8f; font-weight:bold; cursor:pointer;">+ Add Photo</button>
+            <button onclick="submitPost()" style="background:var(--fb-blue); color:white; border:none; padding:8px 20px; border-radius:5px; font-weight:bold;">Post</button>
         </div>
     </div>
     <div id="memory-list"></div>
 </div>
 
-<div id="setup-card" class="hidden" style="margin: 80px auto; max-width: 400px; background: white; padding: 40px 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-    <h2 style="color: var(--fb-blue)">Private Family Album</h2>
-    <button id="login-trigger-btn" onclick="handleAuthClick()" style="padding:15px 30px; font-weight:bold; cursor:pointer; width:100%; font-size:1rem;">
-        Log In with Google
-    </button>
+<div id="setup-card" class="hidden">
+    <img src="icon.png" style="width:80px; margin-bottom:20px;">
+    <h2>Welcome Home</h2>
+    <button onclick="handleAuthClick()" style="background:var(--fb-blue); color:white; border:none; padding:15px 30px; border-radius:8px; width:100%; font-weight:bold;">Link Google Account</button>
 </div>
 
-<input type="file" id="imgIn" accept="image/*" class="hidden" onchange="previewImage(event)">
+<input type="file" id="imgIn" accept="image/*" class="hidden" onchange="handleFile(event)">
 
 <script>
-    const APP_VERSION = "8.0";
+    const APP_VERSION = "8.5";
     const ADMIN_PW = "nimda";
     const CLIENT_ID = '825926708576-1mvndhveb3qe5qhtql14dv85c5rnld74.apps.googleusercontent.com';
     const SCOPES = 'https://www.googleapis.com/auth/drive.file';
     const DB_NAME = "FamilyShare_DB";
 
     let tokenClient, accessToken = localStorage.getItem('google_access_token'), db;
-    let selectedImageB64 = null, clickCount = 0;
     let isAdmin = (sessionStorage.getItem('isAdmin') === 'true');
-    let userEmail = localStorage.getItem('user_email') || ""; 
+    let userEmail = localStorage.getItem('user_email') || "";
+    let selectedImageB64 = null;
 
+    // --- APP START ---
     window.onload = () => {
-        setTimeout(() => {
-            const splash = document.getElementById('splash-screen');
-            if(splash) {
-                splash.style.opacity = '0';
-                setTimeout(() => {
-                    splash.classList.add('hidden');
-                    openDB().then(() => { loadFeed(); gisInit(); });
-                }, 800);
-            }
-        }, 5000);
+        openDB().then(() => { loadFeed(); gisInit(); });
     };
 
     function openDB() {
-        return new Promise((resolve) => {
-            const request = indexedDB.open(DB_NAME, 1);
-            request.onupgradeneeded = e => { e.target.result.createObjectStore("memories", { keyPath: "id" }); };
-            request.onsuccess = e => { db = e.target.result; resolve(); };
+        return new Promise((res) => {
+            const req = indexedDB.open(DB_NAME, 1);
+            req.onupgradeneeded = e => { e.target.result.createObjectStore("memories", { keyPath: "id" }); };
+            req.onsuccess = e => { db = e.target.result; res(); };
         });
     }
 
@@ -125,7 +142,7 @@
                 accessToken = res.access_token;
                 localStorage.setItem('google_access_token', accessToken);
                 if(!userEmail) {
-                    userEmail = prompt("Confirm your email:");
+                    userEmail = prompt("Enter your Name/Email for posting:");
                     localStorage.setItem('user_email', userEmail);
                 }
                 updateViewState(true);
@@ -138,29 +155,105 @@
 
     function updateViewState(isLoggedIn) {
         document.getElementById('setup-card').classList.toggle('hidden', isLoggedIn);
-        document.getElementById('logout-btn').classList.toggle('hidden', !isLoggedIn);
-        const isGuest = isLoggedIn && !userEmail;
-        document.getElementById('composer-area').classList.toggle('hidden', !isLoggedIn || isGuest);
-        const roleDiv = document.getElementById('role-display');
-        if(isLoggedIn) {
-            roleDiv.innerHTML = isGuest ? `<span class="guest-badge">Guest Mode</span>` : `<span class="guest-badge" style="background:#e3f2fd; color:#1877f2">User: ${userEmail}</span>`;
+        document.getElementById('composer-area').classList.toggle('hidden', !isLoggedIn);
+        if(isAdmin) document.getElementById('admin-indicator').style.display = 'inline';
+    }
+
+    function toggleSidebar() {
+        document.getElementById('admin-sidebar').classList.toggle('open');
+    }
+
+    // --- ADMIN ACCESS ---
+    let clicks = 0;
+    function adminCheck() {
+        clicks++;
+        if (clicks >= 5) {
+            clicks = 0;
+            if (isAdmin || prompt("Admin Password:") === ADMIN_PW) {
+                isAdmin = true;
+                sessionStorage.setItem('isAdmin', 'true');
+                document.getElementById('admin-indicator').style.display = 'inline';
+                toggleSidebar();
+                loadFeed();
+            }
         }
     }
 
-    function handleAuthClick() { if(tokenClient) tokenClient.requestAccessToken({prompt: 'select_account'}); }
+    // --- PHOTO ACTIONS (DOWNLOAD & DELETE) ---
+    function downloadImg(b64, name) {
+        const link = document.createElement('a');
+        link.href = b64;
+        link.download = `FamilyShare_${name || 'Memory'}.jpg`;
+        link.click();
+    }
 
+    function deletePhoto(id) {
+        if(confirm("Permanently delete this memory?")) {
+            const tx = db.transaction("memories", "readwrite");
+            tx.objectStore("memories").delete(id);
+            tx.oncomplete = () => autoSync();
+        }
+    }
+
+    // --- FEED LOADING ---
+    function loadFeed() {
+        const list = document.getElementById('memory-list');
+        db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => {
+            const items = e.target.result.sort((a,b)=>b.timestamp-a.timestamp);
+            list.innerHTML = "";
+            items.forEach(m => {
+                const card = document.createElement('div');
+                card.className = 'memory-card';
+                
+                // Show delete only if Admin or Owner
+                const showDelete = isAdmin || (m.owner === userEmail);
+                
+                card.innerHTML = `
+                    <div style="padding:12px; display:flex; align-items:center; gap:10px;">
+                        <div style="width:36px; height:36px; background:#ddd; border-radius:50%"></div>
+                        <div style="font-size:0.9rem; font-weight:bold;">${m.owner || 'Family'}<br>
+                        <span style="font-size:0.75rem; color:#888; font-weight:normal;">${new Date(m.timestamp).toLocaleString()}</span></div>
+                    </div>
+                    ${m.text ? `<div style="padding:0 12px 12px;">${m.text}</div>` : ""}
+                    ${m.image ? `<img src="${m.image}" class="card-img">` : ""}
+                    <div class="card-overlay-actions">
+                        <button class="action-circle btn-download" onclick="downloadImg('${m.image}', '${m.timestamp}')" title="Download Image">⬇️</button>
+                        ${showDelete ? `<button class="action-circle btn-delete" onclick="deletePhoto('${m.id}')" title="Delete Forever">🗑️</button>` : ""}
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        };
+    }
+
+    // --- UTILITIES ---
     async function submitPost() {
         const text = document.getElementById('post-text').value.trim();
-        if (!text && !selectedImageB64) return;
-        const memory = { id: crypto.randomUUID(), text: text, image: selectedImageB64, timestamp: Date.now(), owner: userEmail };
+        if(!text && !selectedImageB64) return;
+        const memory = { id: crypto.randomUUID(), text, image: selectedImageB64, timestamp: Date.now(), owner: userEmail };
         const tx = db.transaction("memories", "readwrite");
         tx.objectStore("memories").add(memory);
-        tx.oncomplete = async () => {
+        tx.oncomplete = () => {
             document.getElementById('post-text').value = "";
             selectedImageB64 = null;
-            document.getElementById('preview-container').style.display = 'none';
-            await autoSync();
+            autoSync();
         };
+    }
+
+    function handleFile(e) {
+        const reader = new FileReader();
+        reader.onload = ev => {
+            const img = new Image(); img.src = ev.target.result;
+            img.onload = () => {
+                const cvs = document.createElement('canvas');
+                const scale = Math.min(1, 1000/img.width);
+                cvs.width = img.width*scale; cvs.height = img.height*scale;
+                cvs.getContext('2d').drawImage(img, 0,0, cvs.width, cvs.height);
+                selectedImageB64 = cvs.toDataURL('image/jpeg', 0.7);
+                alert("Photo attached!");
+            }
+        };
+        reader.readAsDataURL(e.target.files[0]);
     }
 
     async function autoSync() {
@@ -194,74 +287,16 @@
         } catch (e) { console.error(e); }
     }
 
-    function loadFeed() {
-        const list = document.getElementById('memory-list');
-        db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => {
-            const items = e.target.result.sort((a,b)=>b.timestamp-a.timestamp);
-            list.innerHTML = "";
-            items.forEach(m => {
-                const card = document.createElement('div');
-                card.className = 'memory-card';
-                const canDelete = isAdmin || (m.owner === userEmail && userEmail !== "");
-                let deleteBtn = canDelete ? `<button style="background:none; border:none; color:#e63946; font-weight:bold; cursor:pointer;" onclick="deletePhoto('${m.id}')">🗑️ Remove</button>` : "";
-                card.innerHTML = `<div style="padding:12px; display:flex; align-items:center; gap:10px;"><div style="width:36px; height:36px; background:#ddd; border-radius:50%"></div><div style="font-size:0.9rem; font-weight:bold;">${m.owner || "Family Member"}<br><span style="font-size:0.7rem; color:#65676b; font-weight:normal;">${new Date(m.timestamp).toLocaleString()}</span></div></div>` +
-                                 (m.text ? `<div style="padding:0 12px 12px;">${m.text}</div>` : "") +
-                                 (m.image ? `<img src="${m.image}" style="width:100%">` : "") +
-                                 `<div style="padding:8px; display:flex; justify-content:center; border-top:1px solid #F0F2F5;">${deleteBtn}</div>`;
-                list.appendChild(card);
-            });
-        };
+    function shareInvite(plat) {
+        const code = document.getElementById('inv-code').value;
+        const msg = `Join our family album! App: ${window.location.href} Code: ${code}`;
+        if(plat === 'whatsapp') window.location.href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
     }
 
-    function deletePhoto(id) {
-        if(confirm("Delete memory?")) {
-            const tx = db.transaction("memories", "readwrite");
-            tx.objectStore("memories").delete(id);
-            tx.oncomplete = () => autoSync();
-        }
-    }
-
-    function previewImage(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = async ev => {
-            const img = new Image(); img.src = ev.target.result;
-            img.onload = () => {
-                const cvs = document.createElement('canvas');
-                const scale = Math.min(1, 1000 / img.width);
-                cvs.width = img.width * scale; cvs.height = img.height * scale;
-                cvs.getContext('2d').drawImage(img, 0, 0, cvs.width, cvs.height);
-                selectedImageB64 = cvs.toDataURL('image/jpeg', 0.6);
-                document.getElementById('preview-img').src = selectedImageB64;
-                document.getElementById('preview-container').style.display = 'block';
-            };
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function adminCheck() {
-        clickCount++;
-        if (clickCount >= 5) {
-            clickCount = 0;
-            if (isAdmin || prompt("Admin Code:") === ADMIN_PW) {
-                isAdmin = true;
-                sessionStorage.setItem('isAdmin', 'true');
-                document.getElementById('admin-indicator').style.display = 'inline';
-                toggleAdmin();
-                loadFeed();
-            }
-        }
-    }
-
-    function toggleAdmin() {
-        const p = document.getElementById('admin-panel');
-        p.style.display = p.style.display === 'block' ? 'none' : 'block';
-    }
-
-    async function logout() {
+    function handleAuthClick() { tokenClient.requestAccessToken({prompt: 'select_account'}); }
+    
+    function logout() {
         localStorage.clear(); sessionStorage.clear();
-        if (db) db.close();
         indexedDB.deleteDatabase(DB_NAME).onsuccess = () => location.reload();
     }
 </script>
