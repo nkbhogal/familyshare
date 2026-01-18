@@ -6,39 +6,26 @@
     <title>FamilyShare</title>
 
     <meta property="og:title" content="FamilyShare - Our Private Album">
-    <meta property="og:image" content="icon.png">
+    <meta property="og:image" content="icon.png"> 
     <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
+
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://apis.google.com/js/api.js" async defer></script>
     
     <style>
+        /* [All Facebook-style CSS remains identical to v7.9] */
         :root { --fb-blue: #1877F2; --admin-blue: #1d3557; --fb-bg: #F0F2F5; --fb-white: #FFFFFF; }
         body { font-family: Helvetica, Arial, sans-serif; background-color: var(--fb-bg); margin: 0; padding-bottom: 50px; color: #1c1e21; }
-
-        /* FIXED ICON SPLASH SCREEN */
-        #splash-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #FFFFFF; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 9999;
-            transition: opacity 0.8s ease;
-        }
+        #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #FFFFFF; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.8s ease; }
         .splash-content { text-align: center; }
-        .splash-icon { 
-            width: 150px; height: 150px; 
-            object-fit: contain;
-            border-radius: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
+        .splash-icon { width: 150px; height: 150px; object-fit: contain; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .splash-text { font-size: 2rem; font-weight: bold; color: var(--fb-blue); letter-spacing: -1px; }
-
-        /* HEADER & UI COMPONENTS */
         header { background: var(--fb-blue); padding: 10px 0; display: grid; grid-template-columns: 80px 1fr 80px; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); min-height: 65px; }
         .header-center { grid-column: 2; text-align: center; display: flex; flex-direction: column; align-items: center; }
         .header-title { color: white; font-size: 1.4rem; font-weight: bold; margin: 0; }
         .ver-btn { font-size: 0.9rem; color: white; background: rgba(0,0,0,0.2); padding: 4px 12px; border-radius: 15px; cursor: pointer; border: none; margin-top: 5px; font-weight: bold; }
         .btn-logout-header { grid-column: 3; background: rgba(255,255,255,0.2) !important; border: none; color: white !important; padding: 6px; margin-right: 10px; border-radius: 5px; font-size: 0.8rem; }
-        
         #feed { max-width: 550px; margin: 15px auto; padding: 0 10px; }
         .composer { background: var(--fb-white); border-radius: 8px; padding: 12px; margin-bottom: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .memory-card { background: var(--fb-white); border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); overflow: hidden; }
@@ -52,7 +39,7 @@
 
 <div id="splash-screen">
     <div class="splash-content">
-        <img src="./icon.png" class="splash-icon" alt="FamilyShare Icon" onerror="this.style.display='none'">
+        <img src="icon.png" class="splash-icon" alt="FamilyShare Icon" onerror="this.src='https://via.placeholder.com/150?text=FamilyShare'">
         <div class="splash-text">FamilyShare</div>
     </div>
 </div>
@@ -68,7 +55,7 @@
     <div></div>
     <div class="header-center">
         <div class="header-title">FamilyShare</div>
-        <button id="ver-tag" class="ver-btn" onclick="adminCheck()">v7.9 <span id="admin-indicator" style="display:none">🔑</span></button>
+        <button id="ver-tag" class="ver-btn" onclick="adminCheck()">v8.0 <span id="admin-indicator" style="display:none">🔑</span></button>
     </div>
     <button id="logout-btn" class="btn-logout-header hidden" onclick="logout()">Logout</button>
 </header>
@@ -99,7 +86,7 @@
 <input type="file" id="imgIn" accept="image/*" class="hidden" onchange="previewImage(event)">
 
 <script>
-    const APP_VERSION = "7.9";
+    const APP_VERSION = "8.0";
     const ADMIN_PW = "nimda";
     const CLIENT_ID = '825926708576-1mvndhveb3qe5qhtql14dv85c5rnld74.apps.googleusercontent.com';
     const SCOPES = 'https://www.googleapis.com/auth/drive.file';
@@ -111,19 +98,18 @@
     let userEmail = localStorage.getItem('user_email') || ""; 
 
     window.onload = () => {
-        // Reduced splash to 4 seconds for better feel, logic starts at 4, fade at 4.5
         setTimeout(() => {
             const splash = document.getElementById('splash-screen');
-            splash.style.opacity = '0';
-            setTimeout(() => {
-                splash.classList.add('hidden');
-                openDB().then(() => { loadFeed(); gisInit(); });
-            }, 800);
-        }, 4000);
+            if(splash) {
+                splash.style.opacity = '0';
+                setTimeout(() => {
+                    splash.classList.add('hidden');
+                    openDB().then(() => { loadFeed(); gisInit(); });
+                }, 800);
+            }
+        }, 5000);
     };
 
-    // [Rest of the functions: openDB, gisInit, updateViewState, submitPost, autoSync, loadFeed, deletePhoto, previewImage, adminCheck, logout all remain intact as per v7.8 functionality]
-    
     function openDB() {
         return new Promise((resolve) => {
             const request = indexedDB.open(DB_NAME, 1);
