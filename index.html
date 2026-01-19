@@ -1,7 +1,147 @@
-<script>
-    // ... [Previous variables remain]
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FamilyShare Pro</title>
 
-    // --- UPDATED PHOTO HANDLING ---
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js" async defer></script>
+    
+    <style>
+        :root { --primary: #1877F2; --admin-blue: #1d3557; --danger: #d90429; --fb-bg: #F0F2F5; }
+        body { font-family: 'Segoe UI', Tahoma, Helvetica, Arial, sans-serif; background-color: var(--fb-bg); margin: 0; padding: 0; }
+
+        /* HEADER: CENTERED TITLE + RHS LOGOUT */
+        header { 
+            background: var(--primary); height: 65px; display: grid; 
+            grid-template-columns: 100px 1fr 100px; align-items: center; 
+            position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.15); color: white; 
+        }
+        .header-center { grid-column: 2; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+        .header-title { font-size: 1.2rem; font-weight: bold; margin: 0; white-space: nowrap; }
+        
+        .ver-badge { 
+            font-size: 0.7rem; background: rgba(0,0,0,0.2); padding: 2px 8px; border-radius: 12px; 
+            cursor: pointer; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); 
+        }
+
+        /* HEADER LOGOUT BUTTON (RHS) */
+        .header-logout {
+            grid-column: 3; justify-self: end; margin-right: 10px;
+            background: var(--admin-blue); color: white; border: none;
+            padding: 6px 12px; border-radius: 6px; font-weight: bold;
+            font-size: 0.8rem; cursor: pointer; transition: opacity 0.2s;
+        }
+        .header-logout:active { opacity: 0.8; }
+
+        /* SIDEBAR (LHS) */
+        #admin-sidebar { 
+            position: fixed; top: 0; left: -340px; width: 320px; height: 100%; background: var(--admin-blue); 
+            color: white; padding: 25px; box-shadow: 5px 0 15px rgba(0,0,0,0.4); z-index: 2000; transition: left 0.3s ease; 
+        }
+        #admin-sidebar.open { left: 0; }
+        .admin-section { background: rgba(255,255,255,0.08); padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+        .admin-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 10px; font-size: 0.9rem; }
+
+        /* FEED & CARDS */
+        #feed { max-width: 600px; margin: 20px auto; padding: 0 15px; }
+        .memory-card { background: white; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; }
+        .card-header { padding: 12px; font-weight: bold; border-bottom: 1px solid #f0f2f5; font-size: 0.9rem; color: #444; }
+        .card-img { width: 100%; display: block; background: #eee; }
+        
+        #composer-area { background: white; padding: 15px; border-radius: 15px; margin-bottom: 25px; }
+        .hidden { display: none !important; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; margin-bottom: 10px; font-family: inherit; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div></div> <div class="header-center">
+        <div class="header-title">FamilyShare</div>
+        <div id="ver-tag" class="ver-badge" onclick="adminTrigger()">v10.4 <span id="admin-indicator" style="display:none">🔑</span></div>
+    </div>
+    <button id="header-logout-btn" class="header-logout hidden" onclick="fullLogout()">Logout</button>
+</header>
+
+<div id="admin-sidebar">
+    <h2 style="margin-top:0">Admin Console</h2>
+    <div class="admin-section">
+        <label style="font-size:0.75rem; color:#aaa;">INVITE FAMILY</label>
+        <input type="text" id="inv-code" placeholder="Invite Code" style="margin-top:10px;">
+        <button class="admin-btn" onclick="sendInvite('whatsapp')">WhatsApp Invite</button>
+        <button class="admin-btn" onclick="sendInvite('email')">Email Invite</button>
+    </div>
+    <div class="admin-section">
+        <button class="admin-btn" onclick="autoSync()">Force Cloud Sync 🔄</button>
+        <button class="admin-btn" style="background:var(--danger);" onclick="fullLogout()">Full Nuclear Logout 🚨</button>
+    </div>
+    <button onclick="toggleSidebar()" style="background:none; border:none; color:white; width:100%; cursor:pointer; opacity:0.6; margin-top:20px;">← Close Sidebar</button>
+</div>
+
+<div id="feed">
+    <div id="composer-area" class="hidden">
+        <textarea id="post-text" placeholder="Share a family update..." rows="2"></textarea>
+        <div id="preview-container"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+            <button onclick="document.getElementById('imgIn').click()" style="background:none; border:none; color:#2a9d8f; font-weight:bold; cursor:pointer;">+ Add Photo</button>
+            <button class="admin-btn" style="width:auto; margin:0; padding:10px 30px;" onclick="submitPost()">Post</button>
+        </div>
+    </div>
+    <div id="memory-list"></div>
+</div>
+
+<div id="setup-card" class="hidden" style="margin: 100px auto; max-width: 360px; background: white; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+    <h2 style="color:var(--primary);">Family Archives</h2>
+    <button onclick="handleAuthClick()" class="admin-btn">Login with Google</button>
+</div>
+
+<input type="file" id="imgIn" accept="image/*" class="hidden" onchange="handleFile(event)">
+
+<script>
+    const CLIENT_ID = '825926708576-1mvndhveb3qe5qhtql14dv85c5rnld74.apps.googleusercontent.com';
+    const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+    const DB_NAME = "FamilyShare_V10_DB";
+    const ADMIN_PW = "nimda";
+
+    let tokenClient, accessToken = localStorage.getItem('google_access_token'), db;
+    let isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+    let userEmail = localStorage.getItem('user_email') || "";
+    let selectedImageB64 = null;
+    let clicks = 0;
+
+    window.onload = () => { openDB().then(() => { loadFeed(); gisInit(); }); };
+
+    function openDB() {
+        return new Promise((res) => {
+            const req = indexedDB.open(DB_NAME, 1);
+            req.onupgradeneeded = e => e.target.result.createObjectStore("memories", { keyPath: "id" });
+            req.onsuccess = e => { db = e.target.result; res(); };
+        });
+    }
+
+    function loadFeed() {
+        if (!db) return;
+        const list = document.getElementById('memory-list');
+        db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => {
+            const items = e.target.result.sort((a,b) => b.timestamp - a.timestamp);
+            list.innerHTML = "";
+            items.forEach(m => {
+                const card = document.createElement('div');
+                card.className = 'memory-card';
+                card.innerHTML = `
+                    <div class="card-header">${m.owner || "Family Member"} • ${new Date(m.timestamp).toLocaleDateString()}</div>
+                    ${m.text ? `<div style="padding:12px;">${m.text}</div>` : ""}
+                    ${m.image ? `<img src="${m.image}" class="card-img">` : ""}
+                    <div style="padding:10px; text-align:right; border-top:1px solid #f0f2f5;">
+                        <button onclick="deletePhoto('${m.id}')" style="background:none; border:none; cursor:pointer; font-size:1.2rem; opacity:0.3;">🗑️</button>
+                    </div>`;
+                list.appendChild(card);
+            });
+        };
+    }
+
     function handleFile(e) {
         const file = e.target.files[0];
         if(!file) return;
@@ -14,20 +154,7 @@
                 cvs.width = img.width*scale; cvs.height = img.height*scale;
                 cvs.getContext('2d').drawImage(img, 0, 0, cvs.width, cvs.height);
                 selectedImageB64 = cvs.toDataURL('image/jpeg', 0.6);
-                
-                // NEW: Show preview and focus text area
-                const preview = document.getElementById('preview-container');
-                if(!preview) {
-                    // Create preview element if not exists
-                    const p = document.createElement('div');
-                    p.id = "preview-container";
-                    p.innerHTML = `<img src="${selectedImageB64}" style="width:100%; border-radius:8px; margin-top:10px;">`;
-                    document.getElementById('composer-area').insertBefore(p, document.querySelector('.composer-actions'));
-                } else {
-                    preview.innerHTML = `<img src="${selectedImageB64}" style="width:100%; border-radius:8px; margin-top:10px;">`;
-                }
-                
-                // AUTO-FOCUS TEXT AREA
+                document.getElementById('preview-container').innerHTML = `<img src="${selectedImageB64}" style="width:100%; border-radius:8px; margin-top:10px;">`;
                 document.getElementById('post-text').focus();
             };
             img.src = ev.target.result;
@@ -36,31 +163,98 @@
     }
 
     async function submitPost() {
-        const textInput = document.getElementById('post-text');
-        const text = textInput.value.trim();
+        const text = document.getElementById('post-text').value.trim();
         if (!text && !selectedImageB64) return;
-
-        const memory = { 
-            id: crypto.randomUUID(), 
-            text, 
-            image: selectedImageB64, 
-            timestamp: Date.now(), 
-            owner: userEmail 
-        };
-
+        const memory = { id: crypto.randomUUID(), text, image: selectedImageB64, timestamp: Date.now(), owner: userEmail };
         const tx = db.transaction("memories", "readwrite");
         tx.objectStore("memories").add(memory);
         tx.oncomplete = () => {
-            textInput.value = "";
+            document.getElementById('post-text').value = "";
             selectedImageB64 = null;
-            // Clear the preview
-            const preview = document.getElementById('preview-container');
-            if(preview) preview.innerHTML = "";
-            
-            loadFeed(); // Show post instantly
-            autoSync(); // Background save to Google Drive
+            document.getElementById('preview-container').innerHTML = "";
+            loadFeed();
+            autoSync();
         };
     }
 
-    // [All other functions like loadFeed, gisInit, autoSync remain same for stability]
+    function adminTrigger() {
+        clicks++;
+        if (clicks >= 5) {
+            clicks = 0;
+            const code = prompt("Admin Access Code:");
+            if (code === ADMIN_PW) {
+                isAdmin = true; sessionStorage.setItem('isAdmin', 'true');
+                document.getElementById('admin-indicator').style.display = 'inline';
+                toggleSidebar();
+                loadFeed();
+            }
+        }
+        setTimeout(() => { clicks = 0; }, 3000);
+    }
+
+    function toggleSidebar() { document.getElementById('admin-sidebar').classList.toggle('open'); }
+    
+    function sendInvite(method) {
+        const code = document.getElementById('inv-code').value || "MEMBER";
+        const msg = `Join our family album!\nLink: ${window.location.href}\nCode: ${code}`;
+        if(method === 'whatsapp') window.location.href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+        else window.location.href = `mailto:?subject=Family Invite&body=${encodeURIComponent(msg)}`;
+    }
+
+    async function autoSync() {
+        if (!accessToken) return;
+        try {
+            const local = await new Promise(res => {
+                db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => res(e.target.result);
+            });
+            const search = await fetch('https://www.googleapis.com/drive/v3/files?q=name="family_v10.json" and trashed=false', {
+                headers: { 'Authorization': `Bearer ${accessToken}` }
+            });
+            const searchRes = await search.json();
+            let fileId = (searchRes.files && searchRes.files.length > 0) ? searchRes.files[0].id : null;
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify({ name: "family_v10.json", mimeType: "application/json" })], { type: 'application/json' }));
+            form.append('file', new Blob([JSON.stringify(local)], { type: 'application/json' }));
+            await fetch(fileId ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart` : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                method: fileId ? 'PATCH' : 'POST',
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+                body: form
+            });
+            loadFeed();
+        } catch (e) { console.error(e); }
+    }
+
+    function gisInit() {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID, scope: SCOPES,
+            callback: (res) => {
+                accessToken = res.access_token;
+                localStorage.setItem('google_access_token', accessToken);
+                if (!userEmail) { userEmail = prompt("Your Name:"); localStorage.setItem('user_email', userEmail); }
+                updateViewState(true);
+                autoSync();
+            },
+        });
+        updateViewState(!!accessToken);
+    }
+
+    function updateViewState(is) {
+        document.getElementById('setup-card').classList.toggle('hidden', is);
+        document.getElementById('composer-area').classList.toggle('hidden', !is);
+        document.getElementById('header-logout-btn').classList.toggle('hidden', !is);
+        if(isAdmin) document.getElementById('admin-indicator').style.display = 'inline';
+    }
+
+    function deletePhoto(id) { if(confirm("Delete?")) { const tx = db.transaction("memories", "readwrite"); tx.objectStore("memories").delete(id); tx.oncomplete = () => { loadFeed(); autoSync(); }; } }
+    
+    function fullLogout() {
+        if(!confirm("Logout and clear cache?")) return;
+        localStorage.clear(); sessionStorage.clear();
+        if (db) db.close();
+        indexedDB.deleteDatabase(DB_NAME).onsuccess = () => location.reload();
+    }
+
+    function handleAuthClick() { tokenClient.requestAccessToken({prompt: 'select_account'}); }
 </script>
+</body>
+</html>
