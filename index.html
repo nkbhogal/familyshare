@@ -9,87 +9,79 @@
     <script src="https://apis.google.com/js/api.js" async defer></script>
     
     <style>
-        :root { --primary: #1877F2; --admin-blue: #1d3557; --danger: #d90429; --fb-bg: #F0F2F5; --fb-white: #FFFFFF; --accent: #45BD62; }
+        :root { --primary: #1877F2; --admin-blue: #1d3557; --danger: #d90429; --fb-bg: #F0F2F5; --fb-white: #FFFFFF; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--fb-bg); margin: 0; padding: 0; }
 
-        /* HEADER: FIXED CENTERED SINGLE LINE */
+        /* HEADER: CENTERED SINGLE LINE */
         header { 
-            background: var(--primary); 
-            height: 60px; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            position: sticky; 
-            top: 0; 
-            z-index: 1000; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
-            color: white; 
+            background: var(--primary); height: 65px; display: flex; justify-content: center; align-items: center; 
+            position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 4px rgba(0,0,0,0.1); color: white; 
         }
-        .header-content { display: flex; align-items: center; gap: 8px; }
-        .header-title { font-size: 1.3rem; font-weight: bold; margin: 0; }
-        .ver-badge { 
-            font-size: 0.75rem; 
-            background: rgba(255,255,255,0.2); 
-            padding: 2px 8px; 
-            border-radius: 12px; 
-            cursor: pointer; 
-            user-select: none;
-            border: 1px solid rgba(255,255,255,0.3);
-        }
+        .header-content { display: flex; align-items: center; gap: 10px; }
+        .header-title { font-size: 1.4rem; font-weight: bold; margin: 0; }
+        .ver-badge { font-size: 0.85rem; background: rgba(0,0,0,0.2); padding: 4px 12px; border-radius: 15px; cursor: pointer; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); }
 
         /* SIDEBAR */
         #admin-sidebar { 
-            position: fixed; top: 0; left: -340px; width: 320px; height: 100%; 
-            background: var(--admin-blue); color: white; padding: 20px; 
-            box-shadow: 5px 0 15px rgba(0,0,0,0.3); z-index: 2000; 
-            transition: left 0.3s ease; overflow-y: auto; 
+            position: fixed; top: 0; left: -340px; width: 320px; height: 100%; background: var(--admin-blue); 
+            color: white; padding: 20px; box-shadow: 5px 0 15px rgba(0,0,0,0.3); z-index: 2000; transition: left 0.3s ease; 
         }
         #admin-sidebar.open { left: 0; }
+        .admin-section { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 15px; }
         .admin-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
-        
+        .btn-red { background: var(--danger) !important; }
+
         /* FEED & CARDS */
-        #feed { max-width: 600px; margin: 15px auto; padding: 0 15px; }
+        #feed { max-width: 600px; margin: 20px auto; padding: 0 15px; }
         .memory-card { background: white; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden; }
-        .card-img { width: 100%; display: block; min-height: 200px; background: #eee; object-fit: cover; }
+        .card-img { width: 100%; display: block; background: #eee; }
         
         #composer-area { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
         .hidden { display: none !important; }
-        
-        #debug-log { position: fixed; bottom: 0; width: 100%; background: rgba(0,0,0,0.8); color: #0f0; font-size: 10px; padding: 5px; z-index: 9999; display: none; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <header>
     <div class="header-content">
-        <div class="header-title" id="display-name">FamilyShare</div>
-        <div id="ver-tag" class="ver-badge" onclick="adminTrigger()">v10.0 <span id="admin-indicator" style="display:none">🔑</span></div>
+        <div class="header-title">FamilyShare</div>
+        <div id="ver-tag" class="ver-badge" onclick="adminTrigger()">v10.1 <span id="admin-indicator" style="display:none">🔑</span></div>
     </div>
 </header>
 
-<div id="debug-log"></div>
-
 <div id="admin-sidebar">
-    <h2 style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">Admin Console</h2>
-    <button class="admin-btn" onclick="autoSync()">Force Cloud Sync 🔄</button>
-    <button class="admin-btn" onclick="exportData()">Export Backup 💾</button>
-    <button class="admin-btn" style="background:var(--danger);" onclick="logout()">Full Logout 🚨</button>
-    <button onclick="toggleSidebar()" style="background:none; border:none; color:white; width:100%; margin-top:20px; opacity:0.6; cursor:pointer;">Close Console</button>
+    <h2 style="margin-top:0">Admin Console</h2>
+    
+    <div class="admin-section">
+        <p style="font-size:0.8rem; margin-top:0;">INVITE FAMILY</p>
+        <input type="text" id="inv-code" placeholder="Invite Code (e.g. 2026)">
+        <button class="admin-btn" onclick="sendInvite('whatsapp')">Invite via WhatsApp</button>
+        <button class="admin-btn" onclick="sendInvite('email')">Invite via Email</button>
+    </div>
+
+    <div class="admin-section">
+        <button class="admin-btn" onclick="autoSync()">Force Cloud Sync 🔄</button>
+        <button class="admin-btn btn-red" onclick="fullLogout()">Full Logout 🚨</button>
+    </div>
+    
+    <button onclick="toggleSidebar()" style="background:none; border:none; color:white; width:100%; cursor:pointer; opacity:0.6;">← Close</button>
 </div>
 
 <div id="feed">
     <div id="composer-area" class="hidden">
-        <textarea id="post-text" placeholder="Share a family update..." style="width:100%; border:1px solid #ddd; border-radius:8px; padding:10px; height:60px;"></textarea>
-        <div style="display:flex; justify-content:space-between; margin-top:10px;">
-            <button onclick="document.getElementById('imgIn').click()" style="background:none; border:none; color:var(--accent); font-weight:bold; cursor:pointer;">+ Add Photo</button>
-            <button class="admin-btn" style="width:auto; padding:8px 25px; margin:0;" onclick="submitPost()">Post</button>
+        <textarea id="post-text" placeholder="What's happening?" rows="2"></textarea>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <button onclick="document.getElementById('imgIn').click()" style="background:none; border:none; color:#45BD62; font-weight:bold; cursor:pointer;">+ Add Photo</button>
+            <button class="admin-btn" style="width:auto; margin:0; padding:8px 25px;" onclick="submitPost()">Post</button>
         </div>
     </div>
     <div id="memory-list"></div>
+    <button id="main-logout" class="admin-btn btn-red hidden" style="margin-top:20px;" onclick="fullLogout()">Logout from App</button>
 </div>
 
-<div id="setup-card" class="hidden" style="margin: 100px auto; max-width: 350px; background: white; padding: 40px; border-radius: 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-    <h2>Private Album</h2>
+<div id="setup-card" class="hidden" style="margin: 100px auto; max-width: 350px; background: white; padding: 40px; border-radius: 15px; text-align: center;">
+    <h2>Family Album</h2>
     <button onclick="handleAuthClick()" class="admin-btn">Login with Google</button>
 </div>
 
@@ -105,14 +97,9 @@
     let isAdmin = sessionStorage.getItem('isAdmin') === 'true';
     let userEmail = localStorage.getItem('user_email') || "";
     let selectedImageB64 = null;
-    let adminClickCount = 0;
+    let clickCount = 0;
 
-    window.onload = () => {
-        openDB().then(() => {
-            loadFeed();
-            gisInit();
-        });
-    };
+    window.onload = () => { openDB().then(() => { loadFeed(); gisInit(); }); };
 
     function openDB() {
         return new Promise((res) => {
@@ -134,42 +121,48 @@
                 card.className = 'memory-card';
                 card.innerHTML = `
                     <div style="padding:12px; font-weight:bold; font-size:0.9rem;">${m.owner || "Family Member"}</div>
-                    ${m.text ? `<div style="padding:0 12px 10px;">${m.text}</div>` : ""}
-                    ${m.image ? `<img src="${m.image}" class="card-img" loading="lazy">` : ""}
-                    <div style="padding:10px; text-align:right;">
-                        <button onclick="deletePhoto('${m.id}')" style="background:none; border:none; cursor:pointer;">🗑️</button>
+                    ${m.text ? `<div style="padding:0 12px 12px;">${m.text}</div>` : ""}
+                    ${m.image ? `<img src="${m.image}" class="card-img">` : ""}
+                    <div style="padding:10px; text-align:right; border-top:1px solid #eee;">
+                        <button onclick="deletePhoto('${m.id}')" style="background:none; border:none; cursor:pointer; font-size:1.2rem;">🗑️</button>
                     </div>`;
                 list.appendChild(card);
             });
         };
     }
 
-    // --- ADMIN TRIGGER FIX ---
+    // --- ADMIN TRIGGER ---
     function adminTrigger() {
-        adminClickCount++;
-        if (adminClickCount >= 5) {
-            adminClickCount = 0;
-            if (isAdmin || prompt("Admin Access Code:") === ADMIN_PW) {
-                isAdmin = true;
-                sessionStorage.setItem('isAdmin', 'true');
+        clickCount++;
+        if (clickCount >= 5) {
+            clickCount = 0;
+            if (isAdmin || prompt("Admin Code:") === ADMIN_PW) {
+                isAdmin = true; sessionStorage.setItem('isAdmin', 'true');
                 document.getElementById('admin-indicator').style.display = 'inline';
                 toggleSidebar();
             }
         }
-        setTimeout(() => { adminClickCount = 0; }, 3000);
+        setTimeout(() => { clickCount = 0; }, 3000);
     }
 
-    function toggleSidebar() {
-        document.getElementById('admin-sidebar').classList.toggle('open');
+    function toggleSidebar() { document.getElementById('admin-sidebar').classList.toggle('open'); }
+
+    // --- INVITE SYSTEM ---
+    function sendInvite(method) {
+        const code = document.getElementById('inv-code').value || "MEMBER";
+        const msg = `Join our family album!\nLink: ${window.location.href}\nCode: ${code}`;
+        if(method === 'whatsapp') window.location.href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+        else window.location.href = `mailto:?subject=Family Invite&body=${encodeURIComponent(msg)}`;
     }
 
+    // --- SYNC FIX ---
     async function autoSync() {
         if (!accessToken) return;
         try {
             const local = await new Promise(res => {
                 db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => res(e.target.result);
             });
-            const search = await fetch('https://www.googleapis.com/drive/v3/files?q=name="family_v10.json"', {
+            const search = await fetch('https://www.googleapis.com/drive/v3/files?q=name="family_v10.json" and trashed=false', {
                 headers: { 'Authorization': `Bearer ${accessToken}` }
             });
             const searchRes = await search.json();
@@ -185,7 +178,8 @@
                 body: form
             });
             loadFeed();
-        } catch (e) { console.error("Sync error", e); }
+            if(isAdmin) alert("Sync Complete!");
+        } catch (e) { console.error(e); }
     }
 
     async function submitPost() {
@@ -211,7 +205,7 @@
                 cvs.width = img.width*scale; cvs.height = img.height*scale;
                 cvs.getContext('2d').drawImage(img, 0, 0, cvs.width, cvs.height);
                 selectedImageB64 = cvs.toDataURL('image/jpeg', 0.6);
-                alert("Ready to post!");
+                alert("Photo ready!");
             };
             img.src = ev.target.result;
         };
@@ -235,19 +229,20 @@
     function updateViewState(is) {
         document.getElementById('setup-card').classList.toggle('hidden', is);
         document.getElementById('composer-area').classList.toggle('hidden', !is);
+        document.getElementById('main-logout').classList.toggle('hidden', !is);
         if(isAdmin) document.getElementById('admin-indicator').style.display = 'inline';
     }
 
     function deletePhoto(id) { if(confirm("Delete?")) { const tx = db.transaction("memories", "readwrite"); tx.objectStore("memories").delete(id); tx.oncomplete = () => { loadFeed(); autoSync(); }; } }
-    function logout() { localStorage.clear(); sessionStorage.clear(); location.reload(); }
-    function handleAuthClick() { tokenClient.requestAccessToken({prompt: 'select_account'}); }
-    function exportData() {
-        db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => {
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob([JSON.stringify(e.target.result)], {type: "application/json"}));
-            a.download = `FamilyShare_Backup.json`; a.click();
-        };
+    
+    function fullLogout() {
+        if(!confirm("Full Nuclear Logout? This clears everything.")) return;
+        localStorage.clear(); sessionStorage.clear();
+        if (db) db.close();
+        indexedDB.deleteDatabase(DB_NAME).onsuccess = () => location.reload();
     }
+
+    function handleAuthClick() { tokenClient.requestAccessToken({prompt: 'select_account'}); }
 </script>
 </body>
 </html>
