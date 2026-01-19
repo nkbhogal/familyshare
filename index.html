@@ -1,3 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FamilyShare Pro</title>
+
+    <script src="https://accounts.google.com/gsi/client" async defer onload="logDebug('Google Identity Loaded')" onerror="logDebug('Google Identity Failed')"></script>
+    <script src="https://apis.google.com/js/api.js" async defer onload="logDebug('Google API Loaded')" onerror="logDebug('Google API Failed')"></script>
+    
+    <style>
+        :root { --primary: #1877F2; --admin-blue: #1d3557; --danger: #d90429; --fb-bg: #F0F2F5; --fb-white: #FFFFFF; --accent: #45BD62; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--fb-bg); margin: 0; padding: 0; }
+
+        /* PRE-LOADER */
+        #app-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; transition: opacity 0.5s; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* DEBUG CONSOLE */
+        #debug-log { position: fixed; bottom: 0; left: 0; width: 100%; max-height: 100px; background: rgba(0,0,0,0.8); color: #00ff00; font-family: monospace; font-size: 10px; padding: 5px; overflow-y: auto; z-index: 9999; display: none; pointer-events: none; }
+
+        header { background: var(--primary); height: 65px; display: grid; grid-template-columns: 80px 1fr 80px; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); color: white; }
+        .header-title { grid-column: 2; text-align: center; font-size: 1.4rem; font-weight: bold; margin: 0; }
+        .ver-badge { font-size: 0.8rem; background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 12px; cursor: pointer; display: inline-block; margin-top: 5px; }
+
+        #admin-sidebar { position: fixed; top: 0; left: -340px; width: 320px; height: 100%; background: var(--admin-blue); color: white; padding: 15px; box-shadow: 5px 0 15px rgba(0,0,0,0.3); z-index: 2000; transition: left 0.4s ease; overflow-y: auto; }
+        #admin-sidebar.open { left: 0; }
+        .sidebar-section { background: rgba(255,255,255,0.05); border-radius: 10px; padding: 12px; margin-bottom: 15px; }
+        .admin-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        
+        #feed { max-width: 600px; margin: 20px auto; padding: 0 15px; }
+        .memory-card { background: white; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="app-loader">
+    <div class="spinner"></div>
+    <p id="loader-text" style="margin-top:15px; color:#666;">Initializing Core...</p>
+</div>
+
+<div id="debug-log"></div>
+
+<div id="admin-sidebar">
+    <h2 style="margin-top:0">Admin Console 🔑</h2>
+    <div class="sidebar-section">
+        <button class="admin-btn" onclick="toggleDebug()">Toggle Debug Log</button>
+    </div>
+    <button class="admin-btn danger" onclick="logout()">🚨 Nuclear Reset</button>
+    <button onclick="toggleSidebar()" style="background:none; border:none; color:white; margin-top:10px; cursor:pointer; width:100%; opacity:0.6;">← Close</button>
+</div>
+
+<header>
+    <div></div>
+    <div class="header-center">
+        <div class="header-title" id="display-name">FamilyShare</div>
+        <div id="ver-tag" class="ver-badge" onclick="adminCheck()">v9.4 <span id="admin-indicator" style="display:none">🔑</span></div>
+    </div>
+    <div></div>
+</header>
+
+<div id="feed">
+    <div id="composer-area" class="hidden" style="background:white; padding:15px; border-radius:12px; margin-bottom:20px;">
+        <textarea id="post-text" placeholder="Share a family update..." rows="2" style="width:100%; border:1px solid #ddd; border-radius:8px; padding:10px;"></textarea>
+        <div style="display:flex; justify-content:space-between; margin-top:10px;">
+            <button onclick="document.getElementById('imgIn').click()" style="background:none; border:none; color:var(--accent); font-weight:bold; cursor:pointer;">+ Photo</button>
+            <button class="admin-btn" style="width:auto; padding:8px 25px;" onclick="submitPost()">Post</button>
+        </div>
+    </div>
+    <div id="memory-list"></div>
+</div>
+
+<div id="setup-card" class="hidden" style="margin: 100px auto; max-width: 380px; background: white; padding: 40px; border-radius: 15px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+    <h2>Private Album</h2>
+    <button onclick="handleAuthClick()" class="admin-btn" style="width:100%; padding:15px;">Login with Google</button>
+</div>
+
+<input type="file" id="imgIn" accept="image/*" class="hidden" onchange="handleFile(event)">
+
 <script>
     const ADMIN_PW = "nimda";
     const CLIENT_ID = '825926708576-1mvndhveb3qe5qhtql14dv85c5rnld74.apps.googleusercontent.com';
@@ -9,118 +90,160 @@
     let userEmail = localStorage.getItem('user_email') || "";
     let selectedImageB64 = null;
 
-    window.onload = () => { 
-        openDB().then(() => { 
-            loadFeed(); // Initial load from local storage
-            gisInit(); 
-            applySavedBranding(); 
-        }); 
+    // --- DEBUGGING SYSTEM ---
+    function logDebug(msg) {
+        const log = document.getElementById('debug-log');
+        const entry = document.createElement('div');
+        entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        log.appendChild(entry);
+        console.log(msg);
+    }
+
+    function toggleDebug() {
+        const log = document.getElementById('debug-log');
+        log.style.display = log.style.display === 'none' ? 'block' : 'none';
+    }
+
+    window.onerror = function(msg, url, line) {
+        logDebug(`ERR: ${msg} @ ${line}`);
+        hideLoader();
+        return false;
+    };
+
+    function hideLoader() {
+        const loader = document.getElementById('app-loader');
+        if(loader) {
+            loader.style.opacity = '0';
+            setTimeout(() => loader.style.display = 'none', 500);
+        }
+    }
+
+    // --- BOOT SEQUENCE ---
+    window.onload = async () => {
+        logDebug("App Start...");
+        try {
+            await openDB();
+            logDebug("IndexedDB Ready");
+            loadFeed();
+            applySavedBranding();
+            gisInit();
+        } catch (e) {
+            logDebug(`Boot Fail: ${e}`);
+        } finally {
+            setTimeout(hideLoader, 3000); // 3s grace period for rendering
+        }
     };
 
     function openDB() {
-        return new Promise((res) => {
+        return new Promise((resolve, reject) => {
             const req = indexedDB.open(DB_NAME, 1);
             req.onupgradeneeded = e => { e.target.result.createObjectStore("memories", { keyPath: "id" }); };
-            req.onsuccess = e => { db = e.target.result; res(); };
+            req.onsuccess = e => { db = e.target.result; resolve(); };
+            req.onerror = e => reject("DB Open Failed");
         });
     }
 
-    // --- ENHANCED PHOTO SUBMISSION ---
+    function gisInit() {
+        if (!window.google) {
+            logDebug("Waiting for Google Libs...");
+            return;
+        }
+        logDebug("Initializing GIS...");
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID, scope: SCOPES,
+            callback: (res) => {
+                accessToken = res.access_token;
+                localStorage.setItem('google_access_token', accessToken);
+                if(!userEmail) {
+                    userEmail = prompt("Name for the album:");
+                    localStorage.setItem('user_email', userEmail);
+                }
+                updateViewState(true);
+                autoSync();
+            },
+        });
+        updateViewState(!!accessToken);
+        if (accessToken) autoSync();
+    }
+
+    function updateViewState(isLoggedIn) {
+        document.getElementById('setup-card').classList.toggle('hidden', isLoggedIn);
+        document.getElementById('composer-area').classList.toggle('hidden', !isLoggedIn);
+        if(isAdmin) document.getElementById('admin-indicator').style.display = 'inline';
+    }
+
+    // --- UTILITIES ---
+    function loadFeed() {
+        if(!db) return;
+        const list = document.getElementById('memory-list');
+        db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => {
+            const items = e.target.result.sort((a,b)=>b.timestamp-a.timestamp);
+            list.innerHTML = "";
+            items.forEach(m => {
+                const card = document.createElement('div');
+                card.className = 'memory-card';
+                card.innerHTML = `
+                    <div style="padding:12px; font-weight:bold; font-size:0.9rem;">${m.owner}</div>
+                    ${m.text ? `<div style="padding:0 12px 10px;">${m.text}</div>` : ""}
+                    ${m.image ? `<img src="${m.image}" style="width:100%; display:block;">` : ""}
+                    <div style="padding:10px; border-top:1px solid #eee; text-align:right;">
+                        <button onclick="deletePhoto('${m.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:1.2rem;">🗑️</button>
+                    </div>`;
+                list.appendChild(card);
+            });
+        };
+    }
+
     async function submitPost() {
         const text = document.getElementById('post-text').value;
-        if (!text && !selectedImageB64) return;
-
-        const memory = { 
-            id: crypto.randomUUID(), 
-            text, 
-            image: selectedImageB64, 
-            timestamp: Date.now(), 
-            owner: userEmail 
-        };
-
+        const memory = { id: crypto.randomUUID(), text, image: selectedImageB64, timestamp: Date.now(), owner: userEmail };
         const tx = db.transaction("memories", "readwrite");
         tx.objectStore("memories").add(memory);
         tx.oncomplete = () => { 
             document.getElementById('post-text').value = ""; 
             selectedImageB64 = null; 
-            loadFeed(); // Immediate UI update
-            autoSync(); // Background cloud update
+            loadFeed();
+            autoSync(); 
         };
     }
 
-    // --- ROBUST SYNC LOGIC ---
-    async function autoSync() {
-        if (!accessToken) return;
-        try {
-            // 1. Get local data
-            const local = await new Promise(res => {
-                db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => res(e.target.result);
-            });
-
-            // 2. Locate or Create family_ledger_pro.json on Drive
-            const search = await fetch('https://www.googleapis.com/drive/v3/files?q=name="family_ledger_pro.json" and trashed=false', {
-                headers: { 'Authorization': `Bearer ${accessToken}` }
-            });
-            const searchRes = await search.json();
-            let fileId = (searchRes.files && searchRes.files.length > 0) ? searchRes.files[0].id : null;
-            
-            // 3. Download remote data to merge (Prevents losing photos from other devices)
-            if (fileId) {
-                const download = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                });
-                if (download.ok) {
-                    const remoteData = await download.json();
-                    const tx = db.transaction("memories", "readwrite");
-                    remoteData.forEach(m => tx.objectStore("memories").put(m));
-                    tx.oncomplete = () => loadFeed(); // Refresh UI with merged data
-                }
-            }
-
-            // 4. Upload merged local state back to Drive
-            const currentLocal = await new Promise(res => {
-                db.transaction("memories", "readonly").objectStore("memories").getAll().onsuccess = e => res(e.target.result);
-            });
-
-            const metadata = { name: "family_ledger_pro.json", mimeType: "application/json" };
-            const form = new FormData();
-            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-            form.append('file', new Blob([JSON.stringify(currentLocal)], { type: 'application/json' }));
-            
-            await fetch(fileId ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart` : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                method: fileId ? 'PATCH' : 'POST',
-                headers: { 'Authorization': `Bearer ${accessToken}` },
-                body: form
-            });
-        } catch (e) { 
-            console.error("Sync Error:", e); 
-        }
-    }
-
-    // --- IMPROVED IMAGE HANDLING ---
     function handleFile(e) {
-        const file = e.target.files[0];
-        if (!file) return;
+        logDebug("Processing File...");
         const reader = new FileReader();
         reader.onload = ev => {
-            const img = new Image();
+            const img = new Image(); img.src = ev.target.result;
             img.onload = () => {
                 const cvs = document.createElement('canvas');
-                // Limit long edge to 1200px for better performance
-                const maxDim = 1200;
-                let w = img.width, h = img.height;
-                if (w > h && w > maxDim) { h *= maxDim / w; w = maxDim; }
-                else if (h > maxDim) { w *= maxDim / h; h = maxDim; }
-                
-                cvs.width = w; cvs.height = h;
-                cvs.getContext('2d').drawImage(img, 0, 0, w, h);
-                selectedImageB64 = cvs.toDataURL('image/jpeg', 0.7);
-                alert("Photo ready to post!");
-            };
-            img.src = ev.target.result;
+                const scale = Math.min(1, 800/img.width);
+                cvs.width = img.width*scale; cvs.height = img.height*scale;
+                cvs.getContext('2d').drawImage(img, 0,0, cvs.width, cvs.height);
+                selectedImageB64 = cvs.toDataURL('image/jpeg', 0.6);
+                logDebug("Image Compressed.");
+                alert("Photo ready!");
+            }
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(e.target.files[0]);
     }
 
-    // [All other UI and Sidebar functions from v9.1 remain]
+    function adminCheck() {
+        let count = 0;
+        return (function() {
+            count++;
+            if (count >= 5) {
+                count = 0;
+                if (isAdmin || prompt("Admin Password:") === ADMIN_PW) {
+                    isAdmin = true; sessionStorage.setItem('isAdmin', 'true');
+                    document.getElementById('admin-indicator').style.display = 'inline';
+                    toggleSidebar();
+                }
+            }
+        })();
+    }
+
+    function toggleSidebar() { document.getElementById('admin-sidebar').classList.toggle('open'); }
+    function applySavedBranding() { document.getElementById('display-name').innerText = localStorage.getItem('family_name') || "FamilyShare"; }
+    function logout() { localStorage.clear(); sessionStorage.clear(); location.reload(); }
+    function handleAuthClick() { if(tokenClient) tokenClient.requestAccessToken({prompt: 'select_account'}); }
 </script>
+</body>
+</html>
